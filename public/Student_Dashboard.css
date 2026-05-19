@@ -1,0 +1,142 @@
+body {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  background-color: rgba(23, 36, 178, 0.85);
+}
+.layoutDashboard{
+    flex-direction: row;
+    width: 100vw;
+    height: 100vh;
+}
+.topNavBar{
+    width: 15%;
+    height: 100vh;
+    position: fixed;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    color:white;
+}
+.navBarMiddle{
+    width: 80%;
+    margin: 10vh auto;
+    border-top: 1px solid rgb(40, 40, 40);
+    border-bottom: 1px solid rgb(60, 60, 60);
+}
+.NavBarFooter{
+    border-top: 1px solid rgb(66, 66, 66);
+    border-bottom: 1px solid rgb(59, 59, 59);
+    width: 80%;
+    margin: 13vh auto;
+}
+.navLink{
+    display: block;
+    color: rgb(246, 242, 242);
+    text-decoration: none;
+    font-size: 1.2vw;
+    font-weight:750;
+    width: 80%;
+    border-radius: 20px;
+    height: 5%;
+    margin: 3vh auto;
+    line-height: 5vh;
+}
+.middleLinks{
+    margin-top: 1vh;
+}
+.navLink:hover{
+    width: 100%;
+    color:rgba(23, 36, 178, 0.85);
+    background-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: 0.3s;
+    cursor: pointer;
+}
+.topNavBar .fa{
+    margin:0 10px 0 10px;
+}
+.DashboardPart{
+    display: inline-block;
+}
+.dashboardContainer{
+    width: 83%;
+    margin: 3vh 15%;
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 20px;
+}
+#greeting{
+    font-size: 2vw;
+    margin: 2vh 2vw 0 2vw;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    color: rgb(9, 9, 9);
+}
+#greeting, .fa-solid {
+    margin:4vh 5px;
+    font-size: 40px;
+    display: inline-block;
+}
+.welcomeText{
+    font-size: 4vw;
+    margin: 0 2vw 2vh 2vw;
+    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    color: rgb(9, 9, 9);
+}
+.dashboardNameText{
+    font-size: 1.5vw;
+    margin: 5vh 2vw 2vh 2vw;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    color: rgb(9, 9, 9);
+}
+.card{
+    width: 30%;
+    height: 40vh;
+    margin: 2vh 1vw;
+    display: inline-block;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+.cardTitle{
+    font-size: 2vw;
+    margin-top: 3vh;
+    text-align: center;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    color: rgb(9, 9, 9);
+}
+.subjectCount{
+    font-size: 2.5vw;
+    margin-top: 5vh;
+    text-align: center;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    color: rgb(9, 9, 9);
+}
+.upEx{
+    font-size: 2vw;
+    margin-top: 5vh;
+    text-align: center;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    color: rgb(9, 9, 9);
+}
+.Attendecs{
+    font-size: 2.5vw;
+    margin-top: 5vh;
+    text-align: center;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    color: rgb(9, 9, 9);
+}
+.upcomingAssigmentContainer{
+    width: 96%;
+    height: 30vh;
+    margin: 0 2%;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+.announcementContainer{
+    width: 96%;
+    height: 30vh;
+    margin: 5% 2%;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}

@@ -1,0 +1,54 @@
+.timetable-grid {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: white;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.timetable-grid th {
+    background-color: #007bff;
+    color: white;
+    padding: 15px;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+}
+
+.timetable-grid td {
+    border: 1px solid #ddd;
+    vertical-align: top;
+    padding: 10px;
+    width: 16.6%; /* Equal width for 6 days */
+    min-height: 100px;
+}
+
+.timetable-entry {
+    background: #f0f7ff;
+    border-left: 4px solid #007bff;
+    padding: 8px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.timetable-entry .subject {
+    font-weight: bold;
+    color: #333;
+}
+
+.timetable-entry .time {
+    color: #666;
+    font-size: 0.75rem;
+}
+
+.no-class {
+    color: #ccc;
+    font-style: italic;
+    font-size: 0.8rem;
+    text-align: center;
+    padding-top: 10px;
+}
+.timeTablecardContainer{
+    width: 95%;
+    margin: 5vh 2.5vw;
+}

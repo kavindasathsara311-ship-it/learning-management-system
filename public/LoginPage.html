@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="LoginPage.css">
+</head>
+
+<body>
+    <div>
+        <div class="login-wrapper">
+            <form class="logInPageForm" id="logInPageForm" method="post">
+                <fieldset class="logInPageFieldset">
+                    <h1 class="mainTextLogIn">Sign In</h1>
+                    <nav class="navBarLogIn">
+                        <p id="studentLogIn">Student</p>
+                        <p id="teacherLogIn">Teacher</p>
+                        <p id="adminLogIn">Admin</p>
+                    </nav>
+
+                    <!-- Student Login Form -->
+
+                    <div class="studentLogInForm" id="studentLogInForm">
+                        <input type="text" id="LogInStudentusername" name="username" required placeholder="User Name"
+                            autofocus>
+                        <input type="password" id="LogInStudentpassword" name="password" required
+                            placeholder="Password">
+
+                        <p class="ForgotPass">Forgot Password?</p>
+                        <p class="signUp" id="signUp"><a>Don't have an account? Sign Up</a></p>
+
+                        <button type="button" id="LogInStudentSubmitButton" class="submitButton">Log in</button>
+                    </div>
+
+                    <!-- Teacher Login Form -->
+
+                    <div class="teacherLogInForm" id="teacherLogInForm">
+                        <input type="text" id="LogInTeacherusername" name="username" required
+                            placeholder="Teacher User Name" autofocus>
+                        <input type="password" id="LogInTeacherpassword" name="password" required
+                            placeholder="Teacher Password">
+
+                        <p class="ForgotPass">Forgot Password?</p>
+                        <p class="signUp" id="signUp"><a>Don't have an account? Sign Up</a></p>
+
+                        <button type="submit" id="LogInTeacherSubmitButton" class="submitButton">Log in</button>
+                    </div>
+
+                    <!-- Admin Login Form -->
+
+                    <div class="adminLogInForm" id="adminLogInForm">
+                        <input type="text" id="LogInAdminusername" name="username" required
+                            placeholder="User admin Name" autofocus>
+                        <input type="password" id="LogInAdminpassword" name="password" required
+                            placeholder="Admin Password">
+                        <p class="ForgotPass">Forgot Password?</p>
+                        <p class="signUp" id="signUp"><a>Don't have an account? Sign Up</a></p>
+
+                        <button type="submit" id="LogInAdminSubmitButton" class="submitButton">Log in</button>
+                    </div>
+
+                </fieldset>
+            </form>
+        </div>
+
+        <!-- Sign Up Form -->
+
+        <div class="signup-wrapper">
+            <form id="signupForm" class="signupForm" action="/signup" method="POST">
+                <fieldset class="signUpPageFieldset">
+                    <h1 class="mainTextSignUp">Create a new account</h1>
+                    <nav class="navBarSignUp">
+                        <p id="studentSignUp">Student</p>
+                        <p id="teacherSignUp">Teacher</p>
+                    </nav>
+
+                    <!-- Student Sign Up Form -->
+
+                    <div class="studentSignUpForm" id="studentSignUpForm">
+                        <input type="text" id="signUpStudentName" name="username" required placeholder="User Name"
+                            autofocus>
+                        <input type="number" id="signUpStudentRegisterNumber" name="userRegisterNumber" required
+                            placeholder="User Register Number">
+                        <input type="text" id="signUpStudentAddress" name="address" required placeholder="User Address">
+                        <input type="email" id="signUpStudentEmail" name="email" required placeholder="User Email">
+                        <input type="number" id="signUpStudentPhoneNumber" name="phoneNumber" required
+                            placeholder="User Phone Number">
+                        <input type="text" id="signUpStudentGrade" name="grade" required placeholder="User Grade">
+                        <input type="password" id="signUpStudentPassword" name="password" required
+                            placeholder="Password">
+
+                        <button id="signUpStudentButton" class="SignUpButton">Sign Up</button>
+                    </div>
+
+                    <!-- Teacher Sign Up Form -->
+
+                    <div class="teacherSignUpForm" id="teacherSignUpForm">
+                        <input type="text" id="signUpTeacherName" name="username" required placeholder="Teacher Name"
+                            autofocus>
+                        <input type="number" id="signUpTeacherRegisterNumber" name="userRegisterNumber" required
+                            placeholder="Teacher Register Number">
+                        <input type="email" id="signUpTeacherEmail" name="email" required placeholder="User Email">
+                        <input type="number" id="signUpTeacherTelePhoneNumber" name="phoneNumber" required
+                            placeholder="User Phone Number">
+                        <input type="number" id="signUpTeacherSubjectCount" name="subjectCount" required
+                            placeholder="Count of Teaching Subjects" min="1" max="10">
+                        <div id="dynamicSubjectsContainer" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+                            <!-- Dynamic inputs will be injected here via JS -->
+                        </div>
+                        <input type="password" id="signUpTeacherPassword" name="password" required
+                            placeholder="Password">
+                        <button type="button" id="signUpTeacherButton" class="SignUpButton">Sign Up</button>
+                    </div>
+
+                    <p class="BackToLogIn" id="BackToLogIn">Back to Login</p>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+
+    <!-- OTP Verification Form -->
+    <div class="signup-wrapper" id="otpWrapper" style="display: none;">
+        <div id="otpForm" class="signupForm" style="display: flex;">
+            <fieldset class="signUpPageFieldset">
+                <h1 class="mainTextSignUp">Verify OTP</h1>
+                <p class="descrip" style="margin-top: 20px;">Enter the code sent to your email</p>
+
+                <div style="display: flex; flex-direction: column; align-items: center; margin-top: 30px;">
+
+                    <!-- 6 Digit OTP Container -->
+                    <div class="otp-container" id="otpContainer">
+                        <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]">
+                        <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]">
+                        <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]">
+                        <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]">
+                        <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]">
+                        <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]">
+                    </div>
+
+                    <div style="display: flex; gap: 10px; width: 90%; justify-content: center; margin-top: 20px;">
+                        <button type="button" id="verifyOtpButton" class="SignUpButton"
+                            style="width: 45%; font-size: 16px;">Verify</button>
+                        <button type="button" id="resendOtpButton" class="SignUpButton"
+                            style="width: 45%; background-color: #555; font-size: 16px;">Resend</button>
+                    </div>
+
+                    <button class="OTPCancel" id="cancelOtp">Cancel</button>
+                </div>
+            </fieldset>
+        </div>
+    </div>
+    </div>
+    <script src="LoginPage.js"></script>
+</body>
+
+</html>

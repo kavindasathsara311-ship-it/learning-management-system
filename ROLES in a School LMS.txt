@@ -1,0 +1,338 @@
+ROLES in a School LMS
+
+(Roles = who uses the system)
+
+1️⃣ Student
+
+Responsibilities
+
+View enrolled courses
+
+Access learning materials
+
+Submit assignments
+
+View grades & attendance
+
+Receive announcements
+
+2️⃣ Teacher
+
+Responsibilities
+
+Create and manage courses
+
+Upload lessons/materials
+
+Create assignments & quizzes
+
+Grade student submissions
+
+Post announcements
+
+3️⃣ Admin
+
+Responsibilities
+
+Manage users (students & teachers)
+
+Create courses and classes
+
+Assign teachers to courses
+
+View reports & analytics
+
+System configuration
+
+4️⃣ Parent (Optional – Extra Marks ⭐)
+
+Responsibilities
+
+View student progress
+
+View attendance
+
+Receive notifications
+
+👉 Including an optional role like Parent or Staff gives you extra credit.
+
+🔹 SERVICES in an LMS
+
+(Services = what the system does)
+
+1️⃣ Authentication Service
+
+Login
+
+Logout
+
+Role-based access (student / teacher / admin)
+
+2️⃣ User Management Service
+
+Register users
+
+Update profiles
+
+Assign roles
+
+3️⃣ Course Management Service
+
+Create courses
+
+Enroll students
+
+Assign teachers
+
+4️⃣ Learning Content Service ⭐
+
+Upload notes (PDF, video)
+
+View materials
+
+Organize lessons by topic
+
+5️⃣ Assignment & Assessment Service
+
+Create assignments
+
+Submit assignments
+
+Grade & give feedback
+
+6️⃣ Attendance Service
+
+Mark attendance
+
+View attendance reports
+
+7️⃣ Notification Service
+
+Announcements
+
+Deadlines
+
+Alerts
+
+8️⃣ Reporting Service (Very Good for Marks)
+
+Student progress reports
+
+Teacher performance
+
+Course completion status
+
+Core Entities for a School LMS
+🔹 1. Student
+
+Stores learner information.
+
+Attributes:
+
+student_id (PK)
+
+first_name
+
+last_name
+
+date_of_birth
+
+gender
+
+email
+
+phone
+
+address
+
+admission_date
+
+grade_id (FK)
+
+🔹 2. Teacher
+
+Stores teacher details.
+
+Attributes:
+
+teacher_id (PK)
+
+first_name
+
+last_name
+
+email
+
+phone
+
+subject_specialization
+
+hire_date
+
+🔹 3. Course / Subject
+
+What is taught.
+
+Attributes:
+
+course_id (PK)
+
+course_name
+
+description
+
+grade_id (FK)
+
+🔹 4. Grade / Class
+
+Academic level.
+
+Attributes:
+
+grade_id (PK)
+
+grade_name (e.g., Grade 6)
+
+year
+
+🔹 5. Enrollment
+
+Connects students and courses
+(Many-to-Many relationship)
+
+Attributes:
+
+enrollment_id (PK)
+
+student_id (FK)
+
+course_id (FK)
+
+enrollment_date
+
+status
+
+🔹 6. Lesson / Module
+
+Learning materials.
+
+Attributes:
+
+lesson_id (PK)
+
+course_id (FK)
+
+title
+
+content
+
+upload_date
+
+🔹 7. Assignment
+
+Homework / tasks.
+
+Attributes:
+
+assignment_id (PK)
+
+course_id (FK)
+
+title
+
+due_date
+
+max_marks
+
+🔹 8. Submission
+
+Student answers.
+
+Attributes:
+
+submission_id (PK)
+
+assignment_id (FK)
+
+student_id (FK)
+
+submitted_date
+
+marks
+
+feedback
+
+🔹 9. Exam / Quiz
+
+Assessments.
+
+Attributes:
+
+exam_id (PK)
+
+course_id (FK)
+
+exam_type (Quiz, Mid, Final)
+
+total_marks
+
+exam_date
+
+🔹 10. Result
+
+Stores exam results.
+
+Attributes:
+
+result_id (PK)
+
+exam_id (FK)
+
+student_id (FK)
+
+marks_obtained
+
+grade
+
+🔹 11. Attendance
+
+Tracks presence.
+
+Attributes:
+
+attendance_id (PK)
+
+student_id (FK)
+
+course_id (FK)
+
+date
+
+status (Present/Absent)
+
+🔹 12. User (Login System)
+
+For authentication.
+
+Attributes:
+
+user_id (PK)
+
+username
+
+password
+
+role (Student, Teacher, Admin)
+
+linked_id (student_id / teacher_id)
+
+3️⃣ Relationships (Very Important)
+Relationship	Type
+Student – Grade	One-to-Many
+Teacher – Course	One-to-Many
+Student – Course	Many-to-Many (via Enrollment)
+Course – Lesson	One-to-Many
+Course – Assignment	One-to-Many
+Assignment – Submission	One-to-Many
+Student – Submission	One-to-Many
+Course – Attendance	One-to-Many

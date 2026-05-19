@@ -1,0 +1,59 @@
+body {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #a7afd2, #c3a4e1);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+.layoutDashboard{
+    flex-direction: row;
+    width: 100vw;
+    height: 100vh;
+}
+.topNavBar{
+    width: 15%;
+    height: 100vh;
+    position: fixed;
+    background-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    
+}
+.topNavBar a{
+    display: block;
+    color: rgb(22, 20, 20);
+    text-decoration: none;
+    font-size: 1.2vw;
+}
+.DashboardPart{
+    display: inline-block;
+}
+.dashboardContainer{
+    width: 85%;
+    height: 100vh;
+    margin: 0 15%;
+}
+.card{
+    width: 30%;
+    height: 40vh;
+    margin: 2vh 1vw;
+    display: inline-block;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+.upcomingAssigmentContainer{
+    width: 96%;
+    height: 30vh;
+    margin: 0 2%;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+.announcementContainer{
+    width: 96%;
+    height: 30vh;
+    margin: 5% 2%;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="Student_Subject.css">
+    <link rel="stylesheet" href="Student_Timetable.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body id="body">
+    <div class="layoutDashboard">
+        <nav class="topNavBar DashboardPart" id="topNavBar">
+            <h1 class="dashboardMainText">School Name</h1>
+                <div class="navBarMiddle">
+                    <a class="navLink middleLinks" id="dashboardNavLink"><i class="fa fa-newspaper-o" style="font-size:16px"></i>Dashboard</a>
+                    <a class="navLink middleLinks" id="subjectNavLink"><i class="fa fa-book" style="font-size:16px"></i>Subjects</a>
+                    <a class="navLink middleLinks" id="examNavLink"><i class="fa fa-calendar" style="font-size:16px"></i>Exams</a>
+                    <a class="navLink middleLinks" id="notificationNavLink"><i class="fa fa-clock-o" style="font-size:16px"></i>Notifications</a>
+                    <a class="navLink middleLinks" id="attendanceNavLink"><i class="fa fa-book" style="font-size:16px"></i>Attendencs</a>
+                </div>
+                <div class="NavBarFooter">
+                    <a class="navLink footerNavLink"><i class="fa fa-cog" style="font-size:16px"></i>Settings</a>
+                    <a class="navLink footerNavLink"><i class="fa fa-user" style="font-size:16px"></i>Profile</a>
+                    <a class="navLink logOutButton footerNavLink"><i class="fa fa-sign-out" style="font-size:16px"></i>Log Out</a>
+                </div>
+        </nav>
+        <div class="subjectContainer DashboardPart" id="timeTableContainer">
+            <h1>TimeTable</h1>
+            <div class="timeTablecardContainer" id="timeTablecardContainer">
+
+            </div>
+        </div>
+
+    <script src="dashboard.js"></script>
+    <script src="student_dashboard.js"></script>
+    <script src="student_timetable.js"></script>
+</body>
+</html>

@@ -1,0 +1,261 @@
+.class{
+    width: 200px;
+    background-color: #f0f0f0;
+    color: #333;
+    font-family: Arial, sans-serif;
+    border-radius: 25px;
+}
+.classCard{
+    height: 140px;
+    width: 30%;
+    background: #1f2937;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    border-left: 15px solid #3d5466;
+}
+.classCard:hover {
+    transform: translateY(-5px);
+    background: #3d5466; 
+}
+.class_card{
+    width:30%;
+    display: block;
+    background: #f9f9f9;
+    border-left: 5px solid #007bff;
+    padding: 15px;
+    margin: 0 25px 0 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.class-name{
+    color: #333;
+    font-size: 1.6rem;
+    font-weight: 600;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+.class-info{
+    color: #555;
+    font-size: 1.1rem;
+    font-weight: 600;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+.classContainer{
+    margin-top: 10vh;
+}
+.dashboardHeader{
+    font-size: 2.5vw;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    font-weight: 800;
+    margin: 20px;
+    color: #1f2937;
+}
+.teacherClassHeader{
+    font-size: 1.5rem;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    font-weight: 700;
+    color: #1f2937;
+}
+.teacherSelectedClass{
+    background: #f9f9f9;
+    border-left: 5px solid #007bff;
+    border-radius: 20px;
+    width:96%;
+    margin: 0 2%;
+}
+.teacherClassContent{
+    width: 90%;
+    border-left: 5px solid #007bff;
+    margin: 5% 2%;
+}
+.addAssignmentButton, .addSubmitionLinkButton, .addLessonMetirials{
+    width: 20%;
+    height: 40px;
+    display: block;
+    padding: 2.5px 20px;
+    margin: 5vh 2.5vw;
+    background-color: #1f2937;
+    color: white;
+    border: none;
+    border-radius: 10px;
+}
+.lessonMaterialHeader{
+    font-size: 1.2vw;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 20px 0 10px 0;
+}
+.fileNameInput{
+    width: 80%;
+    height: 5vh;
+    padding: 0 10px;
+    margin: 10px 50px;
+    font-size: 1vw;
+    border: 1px solid #ccc;
+    border-radius: 5px;     
+}
+.fileInput{
+    margin: 10px 50px;
+}
+.fileInput, .uploadLessonButton, .cancelLessonButton{
+    display: block;
+}
+.uploadLessonButton, .cancelLessonButton{
+    width: 20%;
+    height: 40px;
+    display: inline-block;
+    padding: 2.5px 20px;
+    margin: 5vh 2.5vw;
+    background-color: #1f2937;
+    color: white;
+    border: none;
+    border-radius: 10px;
+}
+.assignmentHeader{
+    font-size: 1.2vw;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 20px 0 10px 0;
+}
+.assignmentTitleInput{
+    width: 80%;
+    height: 5vh;
+    padding: 0 10px;
+    margin: 10px 50px;
+    font-size: 1vw;
+    border: 1px solid #ccc;
+    border-radius: 5px;     
+}
+.assignmentDescriptionInput{
+    width: 80%;
+    height: 10vh;
+    padding: 10px;
+    margin: 10px 50px;
+    font-size: 1vw;
+    border: 1px solid #ccc;
+    border-radius: 5px;     
+}
+.assignmentFileInput{
+    margin: 10px 50px;
+    width: 20%;
+}
+.assignmentFileInput, .createAssignmentButton, .cancelAssignmentButton{
+    display: block;
+}
+.createAssignmentButton, .cancelAssignmentButton{
+    width: 20%;
+    height: 40px;
+    display: inline-block;
+    padding: 2.5px 20px;
+    margin: 5vh 2.5vw;
+    background-color: #1f2937;
+    color: white;
+    border: none;
+    border-radius: 10px;
+}
+.teacherClassContent{
+    width: 90%;
+    border-left: 5px solid #007bff;
+    margin: 5% 2%;
+}
+.teacherClassContentHeader{
+    font-size: 1.3rem;
+    color: #007bff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 20px;
+}
+.gradeNameInput{
+    width: 80%;
+    height: 5vh;
+    padding: 0 10px;
+    margin: 10px 50px;
+    font-size: 1vw;
+    border: 1px solid #ccc;
+    border-radius: 5px;     
+}
+.material-name{
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 20px;
+}
+.materialContainer{
+    background: #f9f9f9;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    width:96%;
+    margin: 0 5%;
+}
+.uploadInfo{
+    font-size: 1.5rem;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-style: italic;
+    color: #555;
+    margin: 30px 20px;
+}
+.fileName{
+    font-size: 1.3rem;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 10px 40px;
+}
+.fileLink{
+    font-size: 1.1rem;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: #007bff;
+    margin: 10px 40px;
+}
+.backfromClassButton{
+    width: 20%;
+    height: 40px;
+    display: block;
+    padding: 2.5px 20px;
+    margin: 25px;
+    background-color: #1f2937;
+    color: white;
+    border: none;
+    border-radius: 10px;
+}
+.backfromClassButton, .backfromClassButton:focus {
+    outline: none;
+}
+.backfromClassButton:active {
+    background-color: #3d5466;
+    transform: translateY(2px);
+}
+.backfromClassButton, .classCard{
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+.backfromClassButton, .class_card{
+    display: block;
+}
+.class_card {
+    position: relative; 
+    overflow: hidden;   
+    padding-top: 5px;   
+}
+
+.class_card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;           
+    height: 5px;        
+    background-color: #007bff;
+    transition: width 1s ease-in-out; 
+}
+.class_card:hover::after {
+    width: 100%;
+}
+.backfromClassButton:hover{
+    background-color: #3d5466;
+    transition: background-color 0.3s ease;
+}

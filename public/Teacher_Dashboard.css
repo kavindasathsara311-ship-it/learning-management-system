@@ -1,0 +1,128 @@
+body {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  background-color: rgba(23, 36, 178, 0.85);
+}
+.layoutDashboard{
+    flex-direction: row;
+    width: 100vw;
+    height: 100vh;
+}
+.topNavBar{
+    width: 15%;
+    height: 100vh;
+    position: fixed;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    color:white;
+}
+.navBarMiddle{
+    width: 80%;
+    margin: 6vh auto;
+    border-top: 2px solid rgb(40, 40, 40);
+    border-bottom: 2px solid rgb(60, 60, 60);
+}
+.NavBarFooter{
+    border-top: 2px solid rgb(66, 66, 66);
+    border-bottom: 2px solid rgb(59, 59, 59);
+    width: 80%;
+    margin: 1vh auto;
+}
+.navLink{
+    display: block;
+    color: rgb(246, 242, 2542);
+    text-decoration: none;
+    font-size: 1.2vw;
+    font-weight:750;
+    width: 80%;
+    border-radius: 20px;
+    height: 5%;
+    margin: 3vh auto;
+    line-height: 5vh;
+}
+.middleLinks{
+    margin-top: 1vh;
+}
+.navLink:hover{
+    width: 90%;
+    color:rgba(23, 36, 178, 0.85);
+    background-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: 0.3s;
+    cursor: pointer;
+    padding: 0 10px;
+}
+.topNavBar .fa{
+    margin:0 10px 0 10px;
+}
+.DashboardPart{
+    display: inline-block;
+}
+.dashboardContainer{
+    width: 83%;
+    margin: 3vh 15%;
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 20px;
+}
+#teacherGreeting, .fa-solid{
+    color: rgb(7, 7, 7);
+    text-shadow: 2px 2px 4px rgba(139, 137, 137, 0.5);
+    margin:4vh 5px;
+    font-size: 40px;
+    display: inline-block;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+.card{
+    width: 30%;
+    height: 40vh;
+    margin: 2vh 1vw;
+    display: inline-block;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 15px;
+    border-left: #0069fc solid 5px;
+    border-top: #0069fc solid 5px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+.upcomingAssigmentContainer{
+    width: 96%;
+    height: 30vh;
+    margin: 0 2%;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 15px;
+    border-left: #0069fc solid 5px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+.teacherName{
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: #414242;
+}
+#teacherName{
+    font-size: 2.9rem;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: #0069fc;
+    font-style: italic;
+}
+.announcementContainer{
+    width: 96%;
+    height: 30vh;
+    margin: 5% 2%;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 15px;
+    border-left: #0069fc solid 5px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+.classCardContainer{
+    display: flex;
+    width: 96%;
+    margin: 5% 2%;
+}
+.classCard{
+    margin: 5vh 1vw 5vh 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 20px;
+    padding: 20px;
+    background-color: rgba(3, 5, 106, 0.75);
+    border-radius: 20px;
+}

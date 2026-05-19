@@ -1,0 +1,30 @@
+.exam{
+    display: flex;
+}
+.examCardContainer{
+    width: 96%;
+    margin: 5% 2%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);   /* 3 columns */
+    gap: 20px;
+    padding: 20px;
+}
+.examCard{
+    height: 140px;
+    background: #1f2937;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    border-left: 15px solid #3d5466;
+}
+.examCard:hover {
+    transform: translateY(-5px);
+    background: #3d5466; 
+}
