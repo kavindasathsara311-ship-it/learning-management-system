@@ -74,6 +74,7 @@
                     <nav class="navBarSignUp">
                         <p id="studentSignUp">Student</p>
                         <p id="teacherSignUp">Teacher</p>
+                        <p id="adminSignUp">Admin</p>
                     </nav>
 
                     <!-- Student Sign Up Form -->
@@ -126,6 +127,21 @@
                         <input type="password" id="signUpTeacherPassword" name="password" required
                             placeholder="Password">
                         <button type="button" id="signUpTeacherButton" class="SignUpButton">Sign Up</button>
+                    </div>
+
+                    <!-- Admin Sign Up Form -->
+
+                    <div class="adminSignUpForm" id="adminSignUpForm" style="display: none;">
+                        <input type="text" id="signUpAdminName" name="username" required placeholder="Admin Full Name"
+                            autofocus>
+                        <input type="text" id="signUpAdminRegisterNumber" name="userRegisterNumber" required
+                            placeholder="Admin Employee ID (e.g. ADM002)">
+                        <input type="email" id="signUpAdminEmail" name="email" required placeholder="Official Admin Email">
+                        <input type="number" id="signUpAdminPhoneNumber" name="phoneNumber" required
+                            placeholder="Admin Phone Number">
+                        <input type="password" id="signUpAdminPassword" name="password" required
+                            placeholder="Password">
+                        <button type="button" id="signUpAdminButton" class="SignUpButton">Register Admin</button>
                     </div>
 
                     <p class="BackToLogIn" id="BackToLogIn">Back to Login</p>

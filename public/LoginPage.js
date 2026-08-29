@@ -46,6 +46,17 @@ const signUpTeacherSubjectCount = document.getElementById('signUpTeacherSubjectC
 const dynamicSubjectsContainer = document.getElementById('dynamicSubjectsContainer');
 const signUpTeacherButton = document.getElementById('signUpTeacherButton');
 
+// sign up form inputs and button for admin
+const adminSignUp = document.getElementById('adminSignUp');
+const adminSignUpForm = document.getElementById('adminSignUpForm');
+const signUpAdminName = document.getElementById('signUpAdminName');
+const signUpAdminRegisterNumber = document.getElementById('signUpAdminRegisterNumber');
+const signUpAdminEmail = document.getElementById('signUpAdminEmail');
+const signUpAdminPhoneNumber = document.getElementById('signUpAdminPhoneNumber');
+const signUpAdminPassword = document.getElementById('signUpAdminPassword');
+const signUpAdminButton = document.getElementById('signUpAdminButton');
+const LogInAdminSubmitButton = document.getElementById('LogInAdminSubmitButton');
+
 // student and teacher sign up 
 const studentSignUp = document.getElementById('studentSignUp');
 const teacherSignUp = document.getElementById('teacherSignUp');
@@ -182,17 +193,32 @@ BackToLogIn.addEventListener('click', () => {
 studentSignUp.addEventListener('click', () => {
     studentSignUpForm.style.display = 'block';
     teacherSignUpForm.style.display = 'none';
+    if (adminSignUpForm) adminSignUpForm.style.display = 'none';
 
     studentSignUp.style.borderBottom = '4px solid white';
     teacherSignUp.style.border = 'none';
+    if (adminSignUp) adminSignUp.style.border = 'none';
 });
 teacherSignUp.addEventListener('click', () => {
     teacherSignUpForm.style.display = 'block';
     studentSignUpForm.style.display = 'none';
+    if (adminSignUpForm) adminSignUpForm.style.display = 'none';
 
     studentSignUp.style.borderBottom = 'none';
     teacherSignUp.style.borderBottom = '4px solid white';
+    if (adminSignUp) adminSignUp.style.border = 'none';
 });
+if (adminSignUp) {
+    adminSignUp.addEventListener('click', () => {
+        studentSignUpForm.style.display = 'none';
+        teacherSignUpForm.style.display = 'none';
+        if (adminSignUpForm) adminSignUpForm.style.display = 'block';
+
+        studentSignUp.style.borderBottom = 'none';
+        teacherSignUp.style.borderBottom = 'none';
+        adminSignUp.style.borderBottom = '4px solid white';
+    });
+}
 
 signUpTeacherSubjectCount.addEventListener('input', () => {
     let count = parseInt(signUpTeacherSubjectCount.value);
@@ -515,6 +541,40 @@ signUpTeacherButton.addEventListener('click', (e) => {
     addTeacher();
 });
 
+if (signUpAdminButton) {
+    signUpAdminButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!signUpAdminName.value.trim()) {
+            alert("Please enter Admin full name.");
+            signUpAdminName.focus();
+            return;
+        }
+        if (!signUpAdminEmail.value.trim() || !signUpAdminEmail.value.trim().match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)) {
+            alert("Please enter a valid official email address.");
+            signUpAdminEmail.focus();
+            return;
+        }
+        if (!signUpAdminPassword.value.trim() || signUpAdminPassword.value.length < 6) {
+            alert("Please enter a valid password (at least 6 characters).");
+            signUpAdminPassword.focus();
+            return;
+        }
+        addAdmin();
+    });
+}
+
+function addAdmin() {
+    const userData = {
+        name: signUpAdminName.value.trim(),
+        id: signUpAdminRegisterNumber.value.trim() || "ADM" + Math.floor(100 + Math.random() * 900),
+        email: signUpAdminEmail.value.trim(),
+        phone: signUpAdminPhoneNumber.value.trim() || "",
+        password: signUpAdminPassword.value,
+        role: 'admin'
+    };
+    initiateRegistration(userData);
+}
+
 // ***** Function to add student and teacher (Backend API calls) **************#######
 
 function addStudent() {
@@ -604,6 +664,8 @@ verifyOtpButton.addEventListener('click', () => {
                     window.location.href = "Student_Dashboard.html";
                 } else if (data.message.toLowerCase().includes("teacher")) {
                     window.location.href = "Teacher_Dashboard.html";
+                } else if (data.message.toLowerCase().includes("admin")) {
+                    window.location.href = "Admin_Dashboard.html";
                 } else {
                     window.location.href = "LoginPage.html";
                 }
@@ -684,6 +746,34 @@ LogInTeacherSubmitButton.addEventListener('click', (e) => {
             alert("Teacher login failed");
         });
 });
+
+if (LogInAdminSubmitButton) {
+    LogInAdminSubmitButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        fetch("/admin-login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                email: LogInAdminusername.value,
+                password: LogInAdminpassword.value
+            })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    localStorage.setItem('token', data.token);
+                    window.location.href = "Admin_Dashboard.html";
+                } else {
+                    alert(data.message || "Invalid credentials");
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Admin login failed");
+            });
+    });
+}
 
 // Load available grade options from server
 fetch("/api/grades")

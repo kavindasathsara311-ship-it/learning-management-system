@@ -144,6 +144,19 @@ async function insertTeacher(userData) {
   }
 }
 
+async function insertAdmin(userData) {
+  const { name, id, email, phone, password, address } = userData;
+  const hashedPassword = await bcrypt.hash(password, 10);
+  await pool.query(
+    `INSERT INTO admin (admin_name, admin_reg_no, email, phone_number, password, address)
+     VALUES ($1, $2, $3, $4, $5, $6)
+     ON CONFLICT (email) DO UPDATE SET 
+       password = EXCLUDED.password,
+       admin_name = EXCLUDED.admin_name`,
+    [name, id || 'ADM' + Math.floor(1000 + Math.random() * 9000), email, phone, hashedPassword, address || 'Main Administration Office']
+  );
+}
+
 // --- Routes ---
 
 app.get("/favicon.ico", (req, res) => res.status(204).end());
@@ -190,17 +203,19 @@ app.post("/register-init", async (req, res) => {
   }
 
   try {
-    const table = role === 'student' ? 'student' : 'teacher';
+    const table = role === 'student' ? 'student' : (role === 'teacher' ? 'teacher' : 'admin');
     const existingEmail = await pool.query(`SELECT * FROM ${table} WHERE email = $1`, [email]);
     if (existingEmail.rows.length > 0) {
       return res.status(400).send("Email already registered.");
     }
     
     // Check if ID already exists to prevent 500 error after OTP verification
-    const idField = role === 'student' ? 'student_reg_no' : 'teacher_reg_no';
-    const existingId = await pool.query(`SELECT * FROM ${table} WHERE ${idField} = $1`, [userData.id]);
-    if (existingId.rows.length > 0) {
-      return res.status(400).send("Register Number (ID) already registered.");
+    const idField = role === 'student' ? 'student_reg_no' : (role === 'teacher' ? 'teacher_reg_no' : 'admin_reg_no');
+    if (userData.id) {
+      const existingId = await pool.query(`SELECT * FROM ${table} WHERE ${idField} = $1`, [userData.id]);
+      if (existingId.rows.length > 0) {
+        return res.status(400).send("Register Number (ID) already registered.");
+      }
     }
 
     if (role === 'student') {
@@ -336,6 +351,20 @@ app.post("/verify-otp", async (req, res) => {
       );
       pendingRegistrations.delete(email);
       return res.json({ success: true, message: "Teacher registered successfully", token });
+    } else if (record.role === "admin") {
+      await insertAdmin(record.userData);
+      const token = jwt.sign(
+        {
+          id: record.userData.id || "ADM-001",
+          name: record.userData.name,
+          email: record.userData.email,
+          role: "admin"
+        },
+        JWT_SECRET,
+        { expiresIn: "24h" }
+      );
+      pendingRegistrations.delete(email);
+      return res.json({ success: true, message: "Admin registered successfully", token });
     } else {
       return res.status(400).json({ success: false, message: "Invalid role." });
     }
@@ -472,6 +501,56 @@ app.post("/teacher-login", async (req, res) => {
   }
 });
 
+// Admin Login
+app.post("/admin-login", async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ success: false, message: "Email/Reg No and password are required" });
+  }
+
+  const cleanIdentifier = email.trim();
+  const cleanPassword = password.trim();
+
+  try {
+    const result = await pool.query(
+      "SELECT * FROM admin WHERE LOWER(email) = LOWER($1) OR admin_reg_no = $1 OR admin_id::text = $1 OR LOWER(admin_name) = LOWER($1)",
+      [cleanIdentifier]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ success: false, message: "Invalid credentials: No admin account found matching " + cleanIdentifier });
+    }
+
+    const admin = result.rows[0];
+    let isMatch = false;
+    if (admin.password && (admin.password.startsWith("$2a$") || admin.password.startsWith("$2b$") || admin.password.startsWith("$2y$"))) {
+      isMatch = await bcrypt.compare(cleanPassword, admin.password);
+    } else {
+      isMatch = (cleanPassword === admin.password);
+    }
+
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: "Invalid credentials: Incorrect password" });
+    }
+
+    const token = jwt.sign(
+      {
+        id: admin.admin_reg_no || admin.admin_id,
+        name: admin.admin_name,
+        email: admin.email,
+        role: "admin"
+      },
+      JWT_SECRET,
+      { expiresIn: "24h" }
+    );
+
+    res.json({ success: true, message: "Admin login successful", token });
+  } catch (err) {
+    console.error("Admin login error:", err);
+    res.status(500).json({ success: false, message: "Login failed: " + err.message });
+  }
+});
+
 // Dashboard Endpoints
 app.get("/student-dashboard", verifyToken, (req, res) => {
   if (req.user.role !== "student") {
@@ -485,6 +564,13 @@ app.get("/teacher-dashboard", verifyToken, (req, res) => {
     return res.status(403).send("Access denied");
   }
   res.json({ message: "Welcome Teacher" });
+});
+
+app.get("/admin-dashboard", verifyToken, (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).send("Access denied");
+  }
+  res.json({ message: "Welcome Admin" });
 });
 
 // API Routes
