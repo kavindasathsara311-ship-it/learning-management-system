@@ -4,59 +4,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Student Dashboard - LMS</title>
     <link rel="stylesheet" href="Student_Dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
 <body id="body">
     <div class="layoutDashboard">
-        <nav class="topNavBar DashboardPart" id="topNavBar">
-            <h1 class="dashboardMainText">School Name</h1>
-                <div class="navBarMiddle">
-                    <a class="navLink middleLinks" id="subjectNavLink"><i class="fa fa-book" style="font-size:16px"></i>Subjects</a>
-                    <a class="navLink middleLinks" id="examsNavLink"><i class="fa fa-calendar" style="font-size:16px"></i>Exams</a>
-                    <a class="navLink middleLinks" id="timeTableNavLink"><i class="fa fa-clock" style="font-size:16px"></i>TimeTable</a>
-                    <a class="navLink middleLinks" id="attendanceNavLink"><i class="fa fa-book" style="font-size:16px"></i>Attendencs</a>
-                    <a class="navLink middleLinks" id="notificationNavLink"><i class="fa fa-bell" style="font-size:16px"></i>Notifications</a>
-                </div>
-                <div class="NavBarFooter">
-                    <a class="navLink footerNavLink"><i class="fa fa-cog" style="font-size:16px"></i>Settings</a>
-                    <a class="navLink footerNavLink"><i class="fa fa-user" style="font-size:16px"></i>Profile</a>
-                    <a class="navLink logOutButton footerNavLink"><i class="fa fa-sign-out" style="font-size:16px"></i>Log Out</a>
-                </div>
-        </nav>
-        <div class="dashboardContainer DashboardPart" id="dashboardContainer">
-            <div>
-                <i id="timeIcon" class="fa-solid fa-sun" style="font-size: 60px;"></i>
-                <h1 id="greeting">Good Morning</h1>
-                <h1 class="welcomeText">Welcome <span id="studentName">Student Name</span></h1>
-            </div>
-            <h3 class="dashboardNameText" id="dashboardMainText">Dashboard</h3>
-            <div class="cards-container">
-                <div class="card">
-                    <h2 class="cardTitle">Subjects</h2>
-                    <p class="subjectCount">12</p>
-                </div>
-                <div class="card">
-                    <h2 class="cardTitle">Exams</h2>
-                    <p class="upEx">2 Upcoming Exams</p>
-                </div>
-                <div class="card">
-                    <h2 class="cardTitle">TimeTable</h2>
-                    <p class="Attendecs">92%</p>
-                </div>
-                <div class="upcomingAssigmentContainer">
-                    <p>Assignments upcoming</p>
-                </div>
-                <div class="announcementContainer">
+        <div id="sidebar"></div>
 
+        <div class="dashboardContainer DashboardPart" id="dashboardContainer">
+            <!-- Header Greeting Section -->
+            <div class="dashGreetingBanner">
+                <div class="dashGreetingLeft">
+                    <div class="dashGreetingIconBox">
+                        <i id="timeIcon" class="fa-solid fa-sun"></i>
+                    </div>
+                    <div>
+                        <h1 id="greeting" class="dashGreetingTitle">Good Morning</h1>
+                        <p class="dashGreetingSubtitle">Welcome back, <span id="studentName" class="dashStudentName">Student</span>!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overview KPI Metric Cards -->
+            <div class="dashKpiGrid">
+                <div class="dashKpiCard" onclick="window.location.href='student_subject.html'">
+                    <div class="dashKpiIcon iconBlue">
+                        <i class="fa fa-book"></i>
+                    </div>
+                    <div class="dashKpiInfo">
+                        <span class="dashKpiLabel">Enrolled Subjects</span>
+                        <h3 class="dashKpiValue" id="subjectsCount">--</h3>
+                    </div>
+                </div>
+
+                <div class="dashKpiCard" onclick="window.location.href='student_exam.html'">
+                    <div class="dashKpiIcon iconOrange">
+                        <i class="fa fa-calendar-check"></i>
+                    </div>
+                    <div class="dashKpiInfo">
+                        <span class="dashKpiLabel">Upcoming Exams</span>
+                        <h3 class="dashKpiValue" id="examsCount">--</h3>
+                    </div>
+                </div>
+
+                <div class="dashKpiCard" onclick="window.location.href='student_Attendence.html'">
+                    <div class="dashKpiIcon iconGreen">
+                        <i class="fa fa-chart-pie"></i>
+                    </div>
+                    <div class="dashKpiInfo">
+                        <span class="dashKpiLabel">Attendance Rate</span>
+                        <h3 class="dashKpiValue" id="attendanceRate">--%</h3>
+                    </div>
+                </div>
+
+                <div class="dashKpiCard" onclick="window.location.href='student_timetable.html'">
+                    <div class="dashKpiIcon iconPurple">
+                        <i class="fa fa-clock"></i>
+                    </div>
+                    <div class="dashKpiInfo">
+                        <span class="dashKpiLabel">Today's Schedule</span>
+                        <h3 class="dashKpiValue" id="todayClassesCount">--</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Two Column Widget Area -->
+            <div class="dashWidgetGrid">
+                <!-- Upcoming Assignments Section -->
+                <div class="dashWidgetCard">
+                    <div class="dashWidgetHeader">
+                        <div class="dashWidgetTitle">
+                            <i class="fa fa-tasks" style="color: #00bcd4;"></i>
+                            <span>Upcoming Assignments</span>
+                        </div>
+                        <a href="student_assignments.html" class="dashWidgetViewAll">View All <i class="fa fa-arrow-right"></i></a>
+                    </div>
+                    <div class="dashWidgetList" id="assignmentsContainer">
+                        <p style="color: #64748b; padding: 15px;">Loading assignments...</p>
+                    </div>
+                </div>
+
+                <!-- Recent Announcements Section -->
+                <div class="dashWidgetCard">
+                    <div class="dashWidgetHeader">
+                        <div class="dashWidgetTitle">
+                            <i class="fa fa-bullhorn" style="color: #f59e0b;"></i>
+                            <span>School Announcements</span>
+                        </div>
+                        <a href="student_notification.html" class="dashWidgetViewAll">View All <i class="fa fa-arrow-right"></i></a>
+                    </div>
+                    <div class="dashWidgetList" id="announcementsContainer">
+                        <p style="color: #64748b; padding: 15px;">Loading announcements...</p>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
 
     <script src="dashboard.js"></script>
-    <script src="student_dashboard.js"></script>
+    <script src="student_dashboard_home.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            renderSidebar("dashboard");
+            initDashboardHome();
+        });
+    </script>
 </body>
 
 </html>

@@ -4,43 +4,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teacher Dashboard</title>
+    <title>Teacher - Exam Scheduling & Results</title>
     <link rel="stylesheet" href="Teacher_Dashboard.css">
     <link rel="stylesheet" href="teacher_exam.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .examTabsHeader {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 12px;
+        }
+        .examTabBtn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #cbd5e1;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        .examTabBtn.active, .examTabBtn:hover {
+            background: #00bcd4;
+            color: #ffffff;
+            border-color: #00bcd4;
+        }
+        .formCard {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 600px;
+        }
+        .formGroup {
+            margin-bottom: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .formGroup label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+        .formGroup input, .formGroup select {
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: #1e293b;
+            color: #ffffff;
+            font-size: 14px;
+        }
+        .submitBtn {
+            background: #22c55e;
+            color: #ffffff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .submitBtn:hover {
+            background: #16a34a;
+        }
+    </style>
 </head>
 
 <body id="body">
     <div class="layoutDashboard">
-        <nav class="topNavBar DashboardPart">
-            <h3 class="dashboardMainText">Teacher Dashboard</h3>
-            <div class="navBarMiddle">
-                <a class="navLink" id="dashboard"><i class="fas fa-file-alt"></i> Dashboard</a>
-                <a class="navLink" id="class"><i class="fas fa-chalkboard-teacher"></i> Classes</a>
-                <a class="navLink" id="timeTable"><i class="fas fa-calendar-alt"></i> TimeTable</a>
-                <a class="navLink" id="assignment"><i class="fas fa-tasks"></i> Assignments</a>
-                <a class="navLink" id="notification"><i class="fas fa-bell"></i> Notifications</a>
+        <div id="sidebar"></div>
+
+        <div class="dashboardContainer DashboardPart" id="dashboardContainer" style="padding: 25px; overflow-y: auto; height: 94vh;">
+            <h1 class="dashboardHeader" style="margin: 0 0 8px 0; color: #fff;">Exam Scheduling & Results</h1>
+            <p style="color: #94a3b8; margin: 0 0 20px 0; font-size: 14px;">Schedule upcoming exams for your assigned subjects, monitor schedules, and publish student results.</p>
+
+            <div class="examTabsHeader">
+                <button class="examTabBtn active" id="tabBtn_schedule" onclick="switchExamTab('schedule')">
+                    <i class="fa fa-calendar-plus"></i> Schedule New Exam
+                </button>
+                <button class="examTabBtn" id="tabBtn_manage" onclick="switchExamTab('manage')">
+                    <i class="fa fa-list-check"></i> Manage Scheduled Exams
+                </button>
+                <button class="examTabBtn" id="tabBtn_results" onclick="switchExamTab('results')">
+                    <i class="fa fa-award"></i> Enter & Publish Results
+                </button>
             </div>
-            <div class="NavBarFooter">
-                <a class="navLink"><i class="fas fa-cog"></i> Settings</a>
-                <a class="navLink"><i class="fas fa-user"></i> Profile</a>
-                <a class="navLink logOutButton"><i class="fas fa-sign-out-alt"></i> Log Out</a>
+
+            <!-- Tab 1: Schedule Exam -->
+            <div class="examTabContent" id="tabContent_schedule">
+                <div class="formCard">
+                    <form onsubmit="handleScheduleExam(event)">
+                        <div class="formGroup">
+                            <label>Exam Title / Term</label>
+                            <input type="text" id="examNameInput" placeholder="e.g. Mid-Term Assessment 2026" required>
+                        </div>
+                        <div class="formGroup">
+                            <label>Subject / Class</label>
+                            <select id="examSubjectSelect" required>
+                                <option value="">Loading classes...</option>
+                            </select>
+                        </div>
+                        <div class="formGroup">
+                            <label>Grade Level</label>
+                            <select id="examGradeSelect" required>
+                                <option value="G10">Grade 10</option>
+                                <option value="G11">Grade 11</option>
+                                <option value="G12">Grade 12</option>
+                                <option value="G13">Grade 13</option>
+                            </select>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div class="formGroup">
+                                <label>Exam Date</label>
+                                <input type="date" id="examDateInput" required>
+                            </div>
+                            <div class="formGroup">
+                                <label>Start Time</label>
+                                <input type="time" id="examTimeInput" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="submitBtn"><i class="fa fa-calendar-check"></i> Schedule Exam</button>
+                    </form>
+                </div>
             </div>
-        </nav>
-        <div class="dashboardContainer DashboardPart exam" id="dashboardContainer">
-            <h1>Exams</h1>
-            <div class="examCardContainer">
-                <div class="examCard">Create Exam</div>
-                <div class="examCard">Manage Exams</div>
-                <div class="examCard">Grade Submissions</div>
-                <div class="examCard">Exam Analytics</div>
-                <div class="examCard">Question Bank</div>
-                <div class="examCard">Exam Settings</div>
+
+            <!-- Tab 2: Manage Exams -->
+            <div class="examTabContent" id="tabContent_manage" style="display: none;">
+                <div id="manageExamsContainer">
+                    <p style="color: #94a3b8; padding: 20px;">Loading scheduled exams...</p>
+                </div>
+            </div>
+
+            <!-- Tab 3: Enter Results -->
+            <div class="examTabContent" id="tabContent_results" style="display: none;">
+                <div style="background: rgba(255,255,255,0.06); padding: 18px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; gap: 20px; align-items: center;">
+                    <div style="flex: 1;">
+                        <label style="display: block; font-size: 12px; font-weight: bold; color: #cbd5e1; margin-bottom: 6px; text-transform: uppercase;">Select Exam & Subject</label>
+                        <select id="resultsExamSelect" onchange="loadRosterForResults()" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: #1e293b; color: #fff;">
+                            <option value="">Loading exams...</option>
+                        </select>
+                    </div>
+                    <button onclick="savePublishedResults()" class="submitBtn" style="height: 42px; margin-top: auto;">
+                        <i class="fa fa-cloud-arrow-up"></i> Publish Results
+                    </button>
+                </div>
+
+                <div id="resultsRosterContainer">
+                    <p style="color: #94a3b8; padding: 20px;">Select an exam above to load the student score entry sheet.</p>
+                </div>
             </div>
         </div>
     </div>
+
+    <script src="dashboard.js"></script>
+    <script src="teacher_exam.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            renderSidebar("exams", "teacher");
+        });
+    </script>
 </body>
-<script src="dashboard.js"></script>
-<script src="teacher_Dashboard.js"></script>
 
 </html>

@@ -11,21 +11,7 @@
 
 <body id="body">
     <div class="layoutDashboard">
-        <nav class="topNavBar DashboardPart" id="topNavBar">
-            <h1 class="dashboardMainText">School Name</h1>
-                <div class="navBarMiddle">
-                    <a class="navLink middleLinks" id="dashboardNavLink"><i class="fa fa-newspaper-o" style="font-size:16px"></i>Dashboard</a>
-                    <a class="navLink middleLinks" id="subjectNavLink"><i class="fa fa-calendar" style="font-size:16px"></i>Subjects</a>
-                    <a class="navLink middleLinks" id="timeTableNavLink"><i class="fa fa-clock-o" style="font-size:16px"></i>TimeTable</a>
-                    <a class="navLink middleLinks" id="attendanceNavLink"><i class="fa fa-book" style="font-size:16px"></i>Attendencs</a>
-                    <a class="navLink middleLinks" id="notificationNavLink"><i class="fa fa-book" style="font-size:16px"></i>Notifications</a>
-                </div>
-                <div class="NavBarFooter">
-                    <a class="navLink footerNavLink"><i class="fa fa-cog" style="font-size:16px"></i>Settings</a>
-                    <a class="navLink footerNavLink"><i class="fa fa-user" style="font-size:16px"></i>Profile</a>
-                    <a class="navLink logOutButton footerNavLink"><i class="fa fa-sign-out" style="font-size:16px"></i>Log Out</a>
-                </div>
-        </nav>
+        <div id="sidebar"></div>
         <div class="examContainer DashboardPart" id="dashboardContainer">
             <h1>Exams & Results</h1>
             <div class="examCardContainer" id="examCardContainer">
@@ -39,6 +25,11 @@
     <script src="dashboard.js"></script>
     <script src="student_dashboard.js"></script>
     <script src="student_exam.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            renderSidebar("exams");
+        });
+    </script>
 </body>
 
 </html>

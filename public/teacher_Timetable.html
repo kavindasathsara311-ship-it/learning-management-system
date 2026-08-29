@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teacher Dashboard</title>
+    <title>Teacher - Schedule & Timetable</title>
     <link rel="stylesheet" href="Teacher_Dashboard.css">
     <link rel="stylesheet" href="teacher_Timetable.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -12,29 +12,21 @@
 
 <body id="body">
     <div class="layoutDashboard">
-        <nav class="topNavBar DashboardPart">
-            <h3 class="dashboardMainText">Teacher Dashboard</h3>
-            <div class="navBarMiddle">
-                <a class="navLink" id="dashboard"><i class="fas fa-file-alt"></i> Dashboard</a>
-                <a class="navLink" id="class"><i class="fas fa-chalkboard-teacher"></i> Classes</a>
-                <a class="navLink" id="exam"><i class="fas fa-file-alt"></i> Exams</a>
-                <a class="navLink" id="assignment"><i class="fas fa-tasks"></i> Assignments</a>
-                <a class="navLink" id="notification"><i class="fas fa-bell"></i> Notifications</a>
-            </div>
-            <div class="NavBarFooter">
-                <a class="navLink"><i class="fas fa-cog"></i> Settings</a>
-                <a class="navLink"><i class="fas fa-user"></i> Profile</a>
-                <a class="navLink logOutButton"><i class="fas fa-sign-out-alt"></i> Log Out</a>
-            </div>
-        </nav>
+        <div id="sidebar"></div>
         <div class="dashboardContainer DashboardPart" id="dashboardContainer">
+            <h1 class="dashboardHeader" style="margin-bottom: 20px;">Teacher Weekly Timetable</h1>
             <div class="timetableCardContainer">
+                <p style="color: #64748b; padding: 20px;">Loading schedule...</p>
             </div>
         </div>
     </div>
+    <script src="dashboard.js"></script>
+    <script src="teacher_timetable.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            renderSidebar("timetable", "teacher");
+        });
+    </script>
 </body>
-<script src="dashboard.js"></script>
-<script src="teacher_Dashboard.js"></script>
-<script src="teacher_Timetable.js"></script>
 
 </html>

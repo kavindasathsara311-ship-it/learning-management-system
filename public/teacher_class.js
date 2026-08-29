@@ -45,7 +45,6 @@ manageClassCard?.addEventListener('click', async () => {
 
             classCardContainer.appendChild(div);
             div.addEventListener('click', () => {
-                alert("This feature is under development. Please check back later."+cls.subject_name+cls.grade_name);
                 classCardContainer.innerHTML = "";
                 const teacherSelectedClass = document.createElement("div");
                 teacherSelectedClass.className = "teacherSelectedClass"; 
@@ -64,16 +63,18 @@ manageClassCard?.addEventListener('click', async () => {
                 addAssignmentButton.className = "addAssignmentButton";
                 addAssignmentButton.textContent = "Add Assignment";
 
-                const addSubmitionLinkButton = document.createElement("button");    
-                addSubmitionLinkButton.className = "addSubmitionLinkButton";
-                addSubmitionLinkButton.textContent = "Add Submition Link";
+                const backBtn = document.createElement("button");
+                backBtn.className = "cancelAssignmentButton";
+                backBtn.textContent = "← Back to Classes";
+                backBtn.addEventListener('click', () => {
+                    manageClassCard.click();
+                });
 
                 function renderMenu() {
                     teacherClassContent.innerHTML = "";
                     teacherClassContent.appendChild(addLessonMetirials);
                     teacherClassContent.appendChild(addAssignmentButton);
-                    teacherClassContent.appendChild(addSubmitionLinkButton);
-                    
+                    teacherClassContent.appendChild(backBtn);
                 }
 
                 addLessonMetirials.addEventListener('click', () => {
@@ -121,7 +122,7 @@ manageClassCard?.addEventListener('click', async () => {
                         const file = fileInput.files[0];
                         const fileName = fileNameInput.value.trim();
 
-                        if (!file) return alert("Please select a file");
+                        if (!file || !lessonName || !fileName) return alert("Please fill all lesson material fields");
 
                         const formData = new FormData();
                         formData.append("lesson_name", lessonName);
@@ -130,7 +131,7 @@ manageClassCard?.addEventListener('click', async () => {
                         formData.append("subject_id", cls.subject_id);
 
                         try {
-                            const response = await fetch("http://localhost:3000/api/upload-lesson-material", {
+                            const response = await fetch("/api/upload-lesson-material", {
                                 method: "POST",
                                 headers: {
                                     "Authorization": "Bearer " + token
@@ -140,14 +141,14 @@ manageClassCard?.addEventListener('click', async () => {
 
                             if (!response.ok) throw new Error("Failed to upload");
 
-                            const result = await response.json();
-                            
                             alert("Lesson material uploaded successfully!");
                             lessonNameInput.value = "";
                             fileNameInput.value = "";
                             fileInput.value = "";
+                            renderMenu();
                         } catch (error) {
                             console.error("Error uploading:", error);
+                            alert("Failed to upload lesson material.");
                         }
                     });
                 });
@@ -157,7 +158,7 @@ manageClassCard?.addEventListener('click', async () => {
                     
                     const assignmentHeader = document.createElement("h3");
                     assignmentHeader.className = "assignmentHeader";
-                    assignmentHeader.textContent = "Create Assignment";
+                    assignmentHeader.textContent = "Create Assignment for " + cls.subject_name;
                     teacherClassContent.appendChild(assignmentHeader);
 
                     const assignmentTitleInput = document.createElement("input");
@@ -168,18 +169,35 @@ manageClassCard?.addEventListener('click', async () => {
 
                     const assignmentDescriptionInput = document.createElement("textarea");
                     assignmentDescriptionInput.className = "assignmentDescriptionInput";
-                    assignmentDescriptionInput.placeholder = "Enter assignment description";
+                    assignmentDescriptionInput.placeholder = "Enter assignment description & instructions";
+                    assignmentDescriptionInput.style.cssText = "width: 100%; min-height: 80px; padding: 10px; border-radius: 8px; margin: 10px 0;";
                     teacherClassContent.appendChild(assignmentDescriptionInput);
 
-                    const assinmentFileInput = document.createElement("input");
-                    assinmentFileInput.className = "assignmentFileInput";
-                    assinmentFileInput.type = "file";
-                    assinmentFileInput.accept = ".pdf,.doc,.docx,.ppt,.pptx";
-                    teacherClassContent.appendChild(assinmentFileInput);
+                    const dateLabel = document.createElement("label");
+                    dateLabel.textContent = "Due Date & Time:";
+                    dateLabel.style.cssText = "font-size: 13px; font-weight: bold; color: #fff; display: block; margin-top: 10px;";
+                    teacherClassContent.appendChild(dateLabel);
+
+                    const assignmentDueDateInput = document.createElement("input");
+                    assignmentDueDateInput.className = "assignmentTitleInput";
+                    assignmentDueDateInput.type = "datetime-local";
+                    teacherClassContent.appendChild(assignmentDueDateInput);
+
+                    const marksLabel = document.createElement("label");
+                    marksLabel.textContent = "Max Marks:";
+                    marksLabel.style.cssText = "font-size: 13px; font-weight: bold; color: #fff; display: block; margin-top: 10px;";
+                    teacherClassContent.appendChild(marksLabel);
+
+                    const assignmentMaxMarksInput = document.createElement("input");
+                    assignmentMaxMarksInput.className = "assignmentTitleInput";
+                    assignmentMaxMarksInput.type = "number";
+                    assignmentMaxMarksInput.value = "100";
+                    teacherClassContent.appendChild(assignmentMaxMarksInput);
 
                     const createAssignmentButton = document.createElement("button");
                     createAssignmentButton.className = "createAssignmentButton";
-                    createAssignmentButton.textContent = "Create Assignment";
+                    createAssignmentButton.textContent = "Save & Publish Assignment";
+                    createAssignmentButton.style.cssText = "background: #22c55e; color: white; padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-right: 10px;";
                     teacherClassContent.appendChild(createAssignmentButton);
 
                     const backButton = document.createElement("button");
@@ -190,35 +208,47 @@ manageClassCard?.addEventListener('click', async () => {
                     backButton.addEventListener('click', () => {
                         renderMenu();
                     });
-                });
 
-                addSubmitionLinkButton.addEventListener('click', () => {
-                    teacherClassContent.innerHTML = "";
-                    const submitionLinkHeader = document.createElement("h3");
-                    submitionLinkHeader.className = "submitionLinkHeader";
-                    submitionLinkHeader.textContent = "Add Submition Link";
-                    teacherClassContent.appendChild(submitionLinkHeader);
+                    createAssignmentButton.addEventListener('click', async () => {
+                        const title = assignmentTitleInput.value.trim();
+                        const description = assignmentDescriptionInput.value.trim();
+                        const due_date = assignmentDueDateInput.value;
+                        const max_marks = parseInt(assignmentMaxMarksInput.value, 10) || 100;
 
-                    const submitionLinkInput = document.createElement("input");
-                    submitionLinkInput.className = "submitionLinkInput";
-                    submitionLinkInput.type = "text";
-                    submitionLinkInput.placeholder = "Enter submition link (e.g., Google Form URL)";
-                    teacherClassContent.appendChild(submitionLinkInput);
+                        if (!title || !due_date) {
+                            return alert("Please enter assignment title and due date.");
+                        }
 
-                    const addLinkButton = document.createElement("button");
-                    addLinkButton.className = "addLinkButton";
-                    addLinkButton.textContent = "Add Link";
-                    teacherClassContent.appendChild(addLinkButton);
+                        try {
+                            const res = await fetch("/api/create-assignment", {
+                                method: "POST",
+                                headers: {
+                                    "Authorization": "Bearer " + token,
+                                    "Content-Type": "application/json"
+                                },
+                                body: JSON.stringify({
+                                    subject_id: cls.subject_id,
+                                    title,
+                                    description,
+                                    due_date,
+                                    max_marks
+                                })
+                            });
 
-                    const backButton = document.createElement("button");
-                    backButton.className = "cancelLinkButton";
-                    backButton.textContent = "Back";
-                    teacherClassContent.appendChild(backButton);
-
-                    backButton.addEventListener('click', () => {
-                        renderMenu();
+                            const data = await res.json();
+                            if (data.success) {
+                                alert("Assignment created successfully!");
+                                renderMenu();
+                            } else {
+                                alert("Error: " + (data.message || "Failed to create assignment"));
+                            }
+                        } catch (err) {
+                            console.error("Create assignment error:", err);
+                            alert("Failed to create assignment.");
+                        }
                     });
                 });
+
                 renderMenu();
 
                 teacherSelectedClass.appendChild(teacherClassHeader);
@@ -234,9 +264,6 @@ manageClassCard?.addEventListener('click', async () => {
 });
 
 createClassCard?.addEventListener('click', () => {
-    alert("This feature is under development. Please check back later.");
-    // Logic to create class will go here
-
     viewClassesCard.style.display = "none";
     createClassCard.style.display = "none";
     manageClassCard.style.display = "none";
@@ -428,7 +455,6 @@ viewClassesCard?.addEventListener('click', async () => {
                  backBtn.addEventListener('click', () => {
                     viewClassesCard.click(); 
                 });
-                alert("This feature is under development. Please check back later."+cls.subject_name+cls.grade_name); 
 
                 const teacherClassHeader = document.createElement("h2");
                 teacherClassHeader.className = "teacherClassHeader";

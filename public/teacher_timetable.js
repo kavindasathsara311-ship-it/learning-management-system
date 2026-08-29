@@ -1,21 +1,20 @@
-const timetableCardContainer = document.querySelector('.timetableCardContainer');
+// teacher_timetable.js - Weekly timetable for teachers
 
 async function getTimetable() {
-    alert("This feature is under development. Please check back later.");
+    const timetableCardContainer = document.querySelector('.timetableCardContainer');
+    if (!timetableCardContainer) return;
 
-    try{
+    try {
         const token = localStorage.getItem("token");
         if (!token) {
-            alert("No token found. Please login again.");
             window.location.href = "LoginPage.html";
             return;
         }
-        const response = await fetch("http://localhost:3000/api/teacher-timetable", { 
-            method: "POST", 
+
+        const response = await fetch(`${API_BASE}/api/teacher-timetable`, { 
             headers: {
-                "Authorization": "Bearer " + token,
-                "Content-Type": "application/json"
-            },
+                "Authorization": "Bearer " + token
+            }
         });
 
         if (!response.ok) {
@@ -24,10 +23,7 @@ async function getTimetable() {
         }
 
         const data = await response.json();
-        console.log("Timetable Received:", data.timetable);
-
-        
-        const timeTableData = data.timetable; 
+        const timeTableData = data.timetable || [];
         const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
         let tableHTML = `
@@ -42,17 +38,20 @@ async function getTimetable() {
         `;
 
         daysOfWeek.forEach(day => {
-            const dayEntries = timeTableData.filter(entry => 
-                entry.weekday.trim().toLowerCase() === day.toLowerCase()
-            );
+            const dayEntries = timeTableData.filter(entry => {
+                const dayVal = (entry.weekDay || entry.weekday || "").trim().toLowerCase();
+                return dayVal === day.toLowerCase();
+            });
 
             tableHTML += `<td>`;
             if (dayEntries.length > 0) {
                 dayEntries.forEach(item => {
+                    const start = item.startTime || item.starttime || "";
+                    const end = item.endTime || item.endtime || "";
                     tableHTML += `
                         <div class="timetable-entry">
-                            <div class="subject">${item.subject_name}</div>
-                            <div class="time">${item.starttime} - ${item.endtime}</div>
+                            <div class="subject">${escapeHtml(item.subject_name)}</div>
+                            <div class="time"><i class="fa fa-clock"></i> ${escapeHtml(start)} - ${escapeHtml(end)}</div>
                         </div>
                     `;
                 });
@@ -62,13 +61,31 @@ async function getTimetable() {
             tableHTML += `</td>`;
         });
 
-        tableHTML += `</tr></tbody></table>`;
+        tableHTML += `
+                    </tr>
+                </tbody>
+            </table>
+        `;
 
         timetableCardContainer.innerHTML = tableHTML;
-        
-    }catch(e){
-        console.error("Error retrieving token:", e);
+
+    } catch (err) {
+        console.error("Error loading teacher timetable:", err);
+        timetableCardContainer.innerHTML = `<p style="color: #ef4444; padding: 20px;">Failed to load timetable.</p>`;
     }
 }
 
-getTimetable();
+function escapeHtml(str) {
+    if (!str) return "";
+    return str.replace(/[&<>"']/g, m => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    }[m]));
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    getTimetable();
+});

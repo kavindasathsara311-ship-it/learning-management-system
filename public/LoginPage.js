@@ -377,6 +377,199 @@ resendOtpButton.addEventListener('click', () => {
     }).catch(err => console.error(err));
 });
 
+signUpStudentButton.addEventListener('click', (e) => {
+    e.preventDefault();
+
+    if (!signUpStudentName.value.trim() || !signUpStudentName.value.trim().match(/^[A-Za-z]{2,20} [A-Za-z]{2,20}$/)) {
+        alert("Please enter a valid username.");
+        signUpStudentName.focus();
+        return;
+    }
+    if (!signUpStudentRegisterNumber.value.trim() || isNaN(signUpStudentRegisterNumber.value.trim())) {
+        alert("Please enter a valid user Register number.");
+        signUpStudentRegisterNumber.focus();
+        return;
+    }
+    if (!signUpStudentEmail.value.trim() || !signUpStudentEmail.value.trim().match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)) {
+        alert("Please enter a valid email address.");
+        signUpStudentEmail.focus();
+        return;
+    }
+    if (!signUpStudentPhoneNumber.value.trim() || !signUpStudentPhoneNumber.value.trim().match(/^[0-9]{10}$/)) {
+        alert("Please enter a valid phone number.");
+        signUpStudentPhoneNumber.focus();
+        return;
+    }
+    if (!signUpStudentGrade.value.trim()) {
+        alert("Please enter a valid grade between 1 and 12.");
+        signUpStudentGrade.focus();
+        return;
+    }
+    if (!signUpStudentPassword.value.trim()) {
+        alert("Please enter a valid password.")
+        signUpStudentPassword.focus();
+        return;
+    }
+
+    addStudent();
+});
+
+signUpTeacherButton.addEventListener('click', (e) => {
+    e.preventDefault();
+
+    if (!signUpTeacherName.value.trim()) {
+        alert("Please enter a valid teacher name.");
+        signUpTeacherName.focus();
+        return;
+    }
+    if (!signUpTeacherRegisterNumber.value.trim() || isNaN(signUpTeacherRegisterNumber.value.trim()) || signUpTeacherRegisterNumber.value.length > 8) {
+        alert("Please enter a valid teacher register number (up to 8 digits).");
+        signUpTeacherRegisterNumber.focus();
+        return;
+    }
+    if (!signUpTeacherEmail.value.trim() || !signUpTeacherEmail.value.trim().match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/) || signUpTeacherEmail.value.length > 30) {
+        alert("Please enter a valid email address (up to 30 characters).");
+        signUpTeacherEmail.focus();
+        return;
+    }
+    if (!signUpTeacherTelePhoneNumber.value.trim() || !signUpTeacherTelePhoneNumber.value.trim().match(/^[0-9]{10}$/)) {
+        alert("Please enter a valid 10-digit phone number.");
+        signUpTeacherTelePhoneNumber.focus();
+        return;
+    }
+    const count = parseInt(signUpTeacherSubjectCount.value);
+    if (!count || count < 1) {
+        alert("Please enter a valid count for teaching subjects.");
+        signUpTeacherSubjectCount.focus();
+        return;
+    }
+    const subjectInputs = dynamicSubjectsContainer.querySelectorAll('.dynamic-subject-input');
+    if (subjectInputs.length === 0) return;
+    
+    for (let i = 0; i < subjectInputs.length; i++) {
+        const val = subjectInputs[i].value.trim();
+        if (!val) {
+            alert(`Please enter a valid teaching subject for input #${i+1}.`);
+            subjectInputs[i].focus();
+            return;
+        }
+    }
+    if (!signUpTeacherPassword.value.trim()) {
+        alert("Please enter a valid password.");
+        signUpTeacherPassword.focus();
+        return;
+    }
+
+    addTeacher();
+});
+
+// ***** Function to add student and teacher (Backend API calls) **************#######
+
+function addStudent() {
+    const userData = {
+        name: document.getElementById("signUpStudentName").value,
+        id: document.getElementById("signUpStudentRegisterNumber").value,
+        email: document.getElementById("signUpStudentEmail").value,
+        phone: document.getElementById("signUpStudentPhoneNumber").value,
+        address: document.getElementById("signUpStudentAddress").value,
+        password: document.getElementById("signUpStudentPassword").value,
+        grade_id: document.getElementById("signUpStudentGrade").value,
+        role: 'student'
+    };
+
+    initiateRegistration(userData);
+}
+
+function addTeacher() {
+    const subjectInputs = dynamicSubjectsContainer.querySelectorAll('.dynamic-subject-input');
+    const teachingSubjectsArray = Array.from(subjectInputs).map(inp => inp.value.trim());
+
+    const userData = {
+        name: signUpTeacherName.value,
+        id: signUpTeacherRegisterNumber.value,
+        email: signUpTeacherEmail.value,
+        phone: signUpTeacherTelePhoneNumber.value,
+        password: signUpTeacherPassword.value,
+        teachingSubjects: teachingSubjectsArray,
+        role: 'teacher'
+    };
+    initiateRegistration(userData);
+}
+
+function initiateRegistration(data) {
+    fetch("/register-init", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+    })
+        .then(async res => {
+            const text = await res.text();
+            if (res.ok) {
+                alert(text);
+                currentEmailForOtp = data.email;
+
+                // Reset inputs
+                otpDigits.forEach(input => input.value = '');
+
+                otpWrapper.style.display = 'block';
+                signupForm.style.display = 'none';
+
+                // Focus first digit
+                otpDigits[0].focus();
+
+            } else {
+                alert("Error: " + text);
+            }
+        })
+        .catch(err => console.error(err));
+}
+
+// OTP Logic inside the file end or here
+verifyOtpButton.addEventListener('click', () => {
+    let otp = "";
+    otpDigits.forEach(digit => otp += digit.value);
+
+    if (otp.length < 6) return alert("Please enter complete 6-digit OTP");
+
+    fetch("/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: currentEmailForOtp, otp })
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                localStorage.setItem("token", data.token);
+
+                // Direct to appropriate dashboard
+                if (data.message.toLowerCase().includes("student")) {
+                    window.location.href = "Student_Dashboard.html";
+                } else if (data.message.toLowerCase().includes("teacher")) {
+                    window.location.href = "Teacher_Dashboard.html";
+                } else {
+                    window.location.href = "LoginPage.html";
+                }
+            } else {
+                alert(data.message || "Verification failed");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Error verifying OTP");
+        });
+});
+
+resendOtpButton.addEventListener('click', () => {
+    fetch("/resend-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: currentEmailForOtp })
+    }).then(async res => {
+        alert(await res.text());
+    }).catch(err => console.error(err));
+});
+
 cancelOtp.addEventListener('click', () => {
     otpWrapper.style.display = 'none';
     signupForm.style.display = 'flex'; // Show the signup form again
@@ -395,10 +588,12 @@ LogInStudentSubmitButton.addEventListener('click', (e) => {
     })
         .then(res => res.json())
         .then(data => {
-            alert(data.message);
             if (data.success) {
+                alert(data.message);
                 localStorage.setItem('token', data.token);
                 window.location.href = "Student_Dashboard.html";
+            } else {
+                alert(data.message || "Invalid credentials");
             }
         })
         .catch(err => {
@@ -419,19 +614,27 @@ LogInTeacherSubmitButton.addEventListener('click', (e) => {
     })
         .then(res => res.json())
         .then(data => {
-            alert(data.message);
             if (data.success) {
+                alert(data.message);
                 localStorage.setItem('token', data.token);
                 window.location.href = "Teacher_Dashboard.html";
             } else {
-                alert(data.message); // Should handle the else case if success is false but didn't throw
+                alert(data.message || "Invalid credentials");
             }
         })
         .catch(err => {
             console.error(err);
             alert("Teacher login failed");
-        }
-        );
+        });
 });
 
-
+// Load available grade options from server
+fetch("/api/grades")
+    .then(res => res.json())
+    .then(grades => {
+        const datalist = document.getElementById("gradeOptions");
+        if (datalist && Array.isArray(grades)) {
+            datalist.innerHTML = grades.map(g => `<option value="${g.grade_id}">${g.grade_name}</option>`).join("");
+        }
+    })
+    .catch(err => console.error("Could not load grade list:", err));

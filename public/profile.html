@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile</title>
+    <link rel="stylesheet" href="Student_Dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .profileWrapper {
+            padding: 30px;
+        }
+
+        .profileHeaderCard {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border-radius: 16px;
+            padding: 30px;
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            color: #fff;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .avatarBox {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid #00bcd4;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 188, 212, 0.4);
+        }
+
+        .avatarBox img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .avatarUploadBtn {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00bcd4;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .avatarUploadBtn:hover {
+            background: rgba(0, 188, 212, 0.85);
+            color: #fff;
+        }
+
+        .profileTitleArea h2 {
+            margin: 0 0 5px 0;
+            font-size: 26px;
+            color: #fff;
+        }
+
+        .profileTitleArea p {
+            margin: 0 0 12px 0;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .roleBadge {
+            display: inline-block;
+            padding: 4px 14px;
+            background: rgba(0, 188, 212, 0.15);
+            color: #00bcd4;
+            border: 1px solid #00bcd4;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .infoSectionGrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .infoCard {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-left: 4px solid #00bcd4;
+        }
+
+        .infoCard label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .infoCard p {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        .editBtn {
+            background: #00bcd4;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0, 188, 212, 0.3);
+            transition: 0.2s;
+        }
+
+        .editBtn:hover {
+            background: #00acc1;
+            transform: translateY(-2px);
+        }
+
+        /* Edit Profile Modal */
+        .modalOverlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modalBox {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .modalBox h3 {
+            margin-top: 0;
+            color: #0f172a;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 12px;
+        }
+
+        .formGroup {
+            margin-bottom: 15px;
+        }
+
+        .formGroup label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #475569;
+        }
+
+        .formGroup input, .formGroup textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .modalFooter {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .cancelBtn {
+            background: #94a3b8;
+            color: #fff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .saveBtn {
+            background: #00bcd4;
+            color: #fff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body id="body">
+    <div class="layoutDashboard">
+        <div id="sidebar"></div>
+
+        <div class="dashboardContainer DashboardPart" id="dashboardContainer" style="padding: 30px; overflow-y: auto; height: 94vh;">
+            <div class="profileWrapper">
+                <div class="profileHeaderCard">
+                    <div class="avatarBox">
+                        <img id="avatarImage" src="https://ui-avatars.com/api/?name=User&background=00bcd4&color=fff" alt="User Avatar">
+                        <div class="avatarUploadBtn" onclick="triggerFileInput()" title="Change Profile Picture">
+                            <i class="fa fa-camera"></i>
+                        </div>
+                        <input type="file" id="avatarFileInput" accept="image/*" style="display: none;" onchange="uploadAvatar(this)">
+                    </div>
+                    <div class="profileTitleArea">
+                        <h2 id="userNameDisplay">Loading Name...</h2>
+                        <p id="userRegNoDisplay">Register No: ---</p>
+                        <span class="roleBadge" id="userRoleBadge">STUDENT</span>
+                    </div>
+                </div>
+
+                <div class="infoSectionGrid">
+                    <div class="infoCard">
+                        <h3><i class="fa fa-id-card" style="color: #00bcd4;"></i> Academic & Identity Information</h3>
+                        <div class="infoRow">
+                            <span class="infoLabel">Full Name</span>
+                            <span class="infoValue" id="profileFullName">---</span>
+                        </div>
+                        <div class="infoRow">
+                            <span class="infoLabel">Registration Number</span>
+                            <span class="infoValue" id="profileRegNo">---</span>
+                        </div>
+                        <div class="infoRow">
+                            <span class="infoLabel">Assigned Grade</span>
+                            <span class="infoValue" id="profileGrade">---</span>
+                        </div>
+                        <div class="infoRow">
+                            <span class="infoLabel">Role / Status</span>
+                            <span class="infoValue" id="profileRole">---</span>
+                        </div>
+                    </div>
+
+                    <div class="infoCard">
+                        <h3><i class="fa fa-envelope" style="color: #00bcd4;"></i> Contact & Personal Details</h3>
+                        <div class="infoRow">
+                            <span class="infoLabel">Email Address</span>
+                            <span class="infoValue" id="profileEmail">---</span>
+                        </div>
+                        <div class="infoRow">
+                            <span class="infoLabel">Contact Phone</span>
+                            <span class="infoValue" id="profilePhone">---</span>
+                        </div>
+                        <div class="infoRow">
+                            <span class="infoLabel">Residential Address</span>
+                            <span class="infoValue" id="profileAddress">---</span>
+                        </div>
+                        <div class="infoRow">
+                            <span class="infoLabel">Account Created</span>
+                            <span class="infoValue" id="profileJoined">---</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; margin-top: 25px;">
+                    <button class="editBtn" onclick="openEditModal()"><i class="fa fa-user-pen"></i> Edit Profile Details</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div class="editModalOverlay" id="editModal">
+        <div class="editModalCard">
+            <h3 style="margin-top: 0; color: #0f172a;"><i class="fa fa-user-gear"></i> Edit Profile Details</h3>
+            <div class="formGroup">
+                <label>Full Name</label>
+                <input type="text" id="editNameInput" required placeholder="Enter full name">
+            </div>
+            <div class="formGroup">
+                <label>Contact Phone</label>
+                <input type="tel" id="editPhoneInput" placeholder="Enter phone number">
+            </div>
+            <div class="formGroup">
+                <label>Residential Address</label>
+                <textarea id="editAddressInput" rows="3" placeholder="Enter full address"></textarea>
+            </div>
+            <div class="modalActions">
+                <button class="cancelBtn" onclick="closeEditModal()">Cancel</button>
+                <button class="saveBtn" onclick="saveProfileChanges()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            renderSidebar("profile");
+            loadUserProfile();
+        });
+
+        let currentUser = null;
+
+        async function loadUserProfile() {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                window.location.href = "LoginPage.html";
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:3000/api/profile", {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                if (!data.success) return;
+
+                currentUser = data.user;
+                document.getElementById("userNameDisplay").textContent = currentUser.name;
+                document.getElementById("userRegNoDisplay").textContent = `ID / Reg No: ${currentUser.regNo}`;
+                document.getElementById("userRoleBadge").textContent = currentUser.role.toUpperCase();
+                
+                document.getElementById("profileEmail").textContent = currentUser.email;
+                document.getElementById("profilePhone").textContent = currentUser.phone;
+                document.getElementById("profileAddress").textContent = currentUser.address;
+                document.getElementById("profileExtra").textContent = currentUser.grade ? `Grade ${currentUser.grade}` : currentUser.role.toUpperCase();
+
+                if (currentUser.profilePicture && currentUser.profilePicture !== "Resources/Images/default_avatar.png") {
+                    document.getElementById("avatarImage").src = currentUser.profilePicture.startsWith("http") 
+                        ? currentUser.profilePicture 
+                        : `http://localhost:3000/${currentUser.profilePicture}`;
+                } else {
+                    document.getElementById("avatarImage").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}&background=00bcd4&color=fff`;
+                }
+
+            } catch (err) {
+                console.error("Profile load error:", err);
+            }
+        }
+
+        function triggerFileInput() {
+            document.getElementById("avatarFileInput").click();
+        }
+
+        async function uploadAvatar(input) {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
+            const formData = new FormData();
+            formData.append("profilePicture", file);
+
+            const token = localStorage.getItem("token");
+            try {
+                const response = await fetch("http://localhost:3000/api/profile-picture", {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${token}` },
+                    body: formData
+                });
+                const data = await response.json();
+                alert(data.message);
+                if (data.success) {
+                    loadUserProfile();
+                }
+            } catch (err) {
+                console.error("Avatar upload error:", err);
+                alert("Failed to upload avatar image.");
+            }
+        }
+
+        function openEditModal() {
+            if (!currentUser) return;
+            document.getElementById("editNameInput").value = currentUser.name;
+            document.getElementById("editPhoneInput").value = currentUser.phone === "Not provided" ? "" : currentUser.phone;
+            document.getElementById("editAddressInput").value = currentUser.address === "Not provided" ? "" : currentUser.address;
+            document.getElementById("editModal").style.display = "flex";
+        }
+
+        function closeEditModal() {
+            document.getElementById("editModal").style.display = "none";
+        }
+
+        async function saveProfileChanges() {
+            const name = document.getElementById("editNameInput").value.trim();
+            const phone = document.getElementById("editPhoneInput").value.trim();
+            const address = document.getElementById("editAddressInput").value.trim();
+
+            if (!name) {
+                alert("Name is required.");
+                return;
+            }
+
+            const token = localStorage.getItem("token");
+            try {
+                const response = await fetch("http://localhost:3000/api/profile", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ name, phone, address })
+                });
+
+                const data = await response.json();
+                alert(data.message);
+                if (data.success) {
+                    closeEditModal();
+                    loadUserProfile();
+                }
+            } catch (err) {
+                console.error("Save profile error:", err);
+                alert("Could not update profile.");
+            }
+        }
+    </script>
+</body>
+
+</html>

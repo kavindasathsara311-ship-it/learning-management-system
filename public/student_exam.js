@@ -7,7 +7,6 @@ const examCardContainer = document.getElementById("examCardContainer");
 
 
 examScheduleCard?.addEventListener('click', () => {
-    alert("This feature is under development. Please check back later.");
     examScheduleCard.style.display = "none";
     viewResultsCard.style.display = "none";
     contactInstructorCard.style.display = "none";
@@ -35,8 +34,8 @@ async function getExamSchedule() {
             return;
         }
 
-        const response = await fetch("http://localhost:3000/api/exam-schedule", { 
-            method: "POST", // Must match your app.post in backend
+        const response = await fetch(`${API_BASE}/api/exam-schedule`, { 
+            method: "POST",
             headers: {
                 "Authorization": "Bearer " + token,
                 "Content-Type": "application/json"
@@ -51,7 +50,6 @@ async function getExamSchedule() {
         const data = await response.json();
         console.log("Exam Schedule Received:", data.exam_schedule);
 
-        // Logic to display the data:
         const container = document.getElementById("examCardContainer");
         container.innerHTML = ""; 
 
@@ -81,5 +79,5 @@ async function getExamSchedule() {
 }
 
 function showResults() {
-    alert("This feature is under development. Please check back later.");
+    window.location.href = 'student_exam_results.html';
 }

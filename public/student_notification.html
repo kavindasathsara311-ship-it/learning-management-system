@@ -4,53 +4,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-    <link rel="stylesheet" href="Student_Subject.css">
+    <title>Student Notifications</title>
+    <link rel="stylesheet" href="Student_Dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .notificationsList {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .notificationCard {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-left: 5px solid #00bcd4;
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            gap: 15px;
+            transition: 0.2s;
+        }
+
+        .notificationCard.unread {
+            background: #f0fdf4;
+            border-left-color: #22c55e;
+        }
+
+        .notifHeader {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .notifHeader h3 {
+            margin: 0;
+            color: #0f172a;
+            font-size: 16px;
+        }
+
+        .badgeTag {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .markReadBtn {
+            background: #e2e8f0;
+            color: #475569;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .markReadBtn.read {
+            background: transparent;
+            color: #22c55e;
+            cursor: default;
+        }
+    </style>
 </head>
 
 <body id="body">
     <div class="layoutDashboard">
-        <nav class="topNavBar DashboardPart" id="topNavBar">
-            <h1 class="dashboardMainText">School Name</h1>
-                <div class="navBarMiddle">
-                    <a class="navLink middleLinks" id="dashboardNavLink"><i class="fa fa-newspaper-o" style="font-size:16px"></i>Dashboard</a>
-                    <a class="navLink middleLinks" id="subjectNavLink"><i class="fa fa-book" style="font-size:16px"></i>Subjects</a>
-                    <a class="navLink middleLinks" id="examNavLink"><i class="fa fa-calendar" style="font-size:16px"></i>Exams</a>
-                    <a class="navLink middleLinks" id="timeTableNavLink"><i class="fa fa-clock-o" style="font-size:16px"></i>TimeTable</a>
-                    <a class="navLink middleLinks" id="attendanceNavLink"><i class="fa fa-book" style="font-size:16px"></i>Attendencs</a>
-                </div>
-                <div class="NavBarFooter">
-                    <a class="navLink footerNavLink"><i class="fa fa-cog" style="font-size:16px"></i>Settings</a>
-                    <a class="navLink footerNavLink"><i class="fa fa-user" style="font-size:16px"></i>Profile</a>
-                    <a class="navLink logOutButton footerNavLink"><i class="fa fa-sign-out" style="font-size:16px"></i>Log Out</a>
-                </div>
-        </nav>
-        <div class="subjectContainer DashboardPart" id="dashboardContainer">
-            <div class="subjectCardContainer">
-                <div class="subject_card">Science</div>
-                <div class="subject_card">Mathematics</div>
-                <div class="subject_card">English</div>
-                <div class="subject_card">History</div>
-                <div class="subject_card">Sinhala</div>
-                <div class="subject_card">Tamil</div>
-                <div class="subject_card">Buddisum</div>
-                <div class="subject_card">Christian</div>
-                <div class="subject_card">Civil education</div>
-                <div class="subject_card">Health Education</div>
-                <div class="subject_card">Geography</div>
-                <div class="subject_card">Drama</div>
-                <div class="subject_card">Art</div>
-                <div class="subject_card">Music</div>
-                <div class="subject_card">ICT</div>
-                <div class="subject_card">Practicals</div>
+        <div id="sidebar"></div>
 
+        <div class="dashboardContainer DashboardPart" id="dashboardContainer" style="padding: 30px; overflow-y: auto; height: 94vh;">
+            <div>
+                <h2 style="margin: 0; color: #0f172a;">Announcements & Notifications</h2>
+                <p style="color: #64748b; margin-top: 5px;">School-wide and subject-specific announcements broadcast to your class.</p>
             </div>
-           
+
+            <div class="notificationsList" id="announcementsContainer">
+                <p style="color: #64748b;">Loading notifications...</p>
+            </div>
         </div>
+    </div>
 
     <script src="dashboard.js"></script>
-    <script src="student_dashboard.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            renderSidebar("notifications");
+            loadNotifications();
+        });
+
+        async function loadNotifications() {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/student-announcements`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                if (!data.success) return;
+
+                const container = document.getElementById("announcementsContainer");
+                container.innerHTML = "";
+
+                if (!data.announcements || data.announcements.length === 0) {
+                    container.innerHTML = `<p style="color: #64748b;">No active announcements at this time.</p>`;
+                    return;
+                }
+
+                data.announcements.forEach(a => {
+                    const card = document.createElement("div");
+                    card.className = `notificationCard ${a.is_read ? '' : 'unread'}`;
+                    card.innerHTML = `
+                        <div>
+                            <div class="notifHeader">
+                                <h3>${a.title}</h3>
+                                ${a.subject_name ? `<span class="badgeTag">${a.subject_name}</span>` : '<span class="badgeTag">School-Wide</span>'}
+                            </div>
+                            <p style="color: #334155; font-size: 14px; margin: 0 0 8px 0;">${a.message}</p>
+                            <span style="color: #94a3b8; font-size: 12px;"><i class="fa fa-clock"></i> ${a.created_at}</span>
+                        </div>
+                        <div>
+                            ${a.is_read 
+                                ? `<span class="markReadBtn read"><i class="fa fa-check-circle"></i> Read</span>`
+                                : `<button class="markReadBtn" onclick="markAsRead(${a.announcement_id})"><i class="fa fa-check"></i> Mark as Read</button>`
+                            }
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+
+            } catch (err) {
+                console.error("Error loading notifications:", err);
+            }
+        }
+
+        async function markAsRead(announcementId) {
+            const token = localStorage.getItem("token");
+            try {
+                const response = await fetch(`${API_BASE}/api/announcements/${announcementId}/read`, {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (data.success) {
+                    loadNotifications();
+                }
+            } catch (err) {
+                console.error("Error marking read:", err);
+            }
+        }
+    </script>
 </body>
 
 </html>
