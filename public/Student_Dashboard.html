@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Dashboard - LMS</title>
+    <link rel="stylesheet" href="shared-portal.css">
     <link rel="stylesheet" href="Student_Dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -34,8 +35,8 @@
                         <i class="fa fa-book"></i>
                     </div>
                     <div class="dashKpiInfo">
-                        <span class="dashKpiLabel">Enrolled Subjects</span>
-                        <h3 class="dashKpiValue" id="subjectsCount">--</h3>
+                        <span class="cardTitle">Enrolled Subjects</span>
+                        <h3 class="cardValue" id="subjectsCount">--</h3>
                     </div>
                 </div>
 
@@ -44,18 +45,18 @@
                         <i class="fa fa-calendar-check"></i>
                     </div>
                     <div class="dashKpiInfo">
-                        <span class="dashKpiLabel">Upcoming Exams</span>
-                        <h3 class="dashKpiValue" id="examsCount">--</h3>
+                        <span class="cardTitle">Upcoming Exams</span>
+                        <h3 class="cardValue" id="examsCount">--</h3>
                     </div>
                 </div>
 
                 <div class="dashKpiCard" onclick="window.location.href='student_Attendence.html'">
                     <div class="dashKpiIcon iconGreen">
-                        <i class="fa fa-chart-pie"></i>
+                        <i class="fa fa-calendar-check"></i>
                     </div>
                     <div class="dashKpiInfo">
-                        <span class="dashKpiLabel">Attendance Rate</span>
-                        <h3 class="dashKpiValue" id="attendanceRate">--%</h3>
+                        <span class="cardTitle">Attendance Rate</span>
+                        <h3 class="cardValue" id="attendanceRate">--%</h3>
                     </div>
                 </div>
 
@@ -64,8 +65,8 @@
                         <i class="fa fa-clock"></i>
                     </div>
                     <div class="dashKpiInfo">
-                        <span class="dashKpiLabel">Today's Schedule</span>
-                        <h3 class="dashKpiValue" id="todayClassesCount">--</h3>
+                        <span class="cardTitle">Today's Schedule</span>
+                        <h3 class="cardValue" id="todayClassesCount">--</h3>
                     </div>
                 </div>
             </div>
