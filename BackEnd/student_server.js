@@ -1537,7 +1537,10 @@ app.get("/api/profile", verifyToken, async (req, res) => {
 
     } else if (role === "teacher") {
       const teacherRes = await pool.query(
-        "SELECT teacher_id, teacher_reg_no, teacher_name, email, phone_number, address, profile_picture, settings FROM teacher WHERE teacher_reg_no = $1 OR teacher_id::text = $1 LIMIT 1",
+        `SELECT t.teacher_id, t.teacher_reg_no, t.teacher_name, t.email, t.phone_number, t.address, t.profile_picture, t.settings, t.incharge_grade_id, g.grade_name AS incharge_grade_name
+         FROM teacher t
+         LEFT JOIN grade g ON t.incharge_grade_id = g.grade_id
+         WHERE t.teacher_reg_no = $1 OR t.teacher_id::text = $1 LIMIT 1`,
         [userId]
       );
       if (teacherRes.rows.length === 0) return res.status(404).json({ success: false, message: "Teacher profile not found" });
@@ -1564,8 +1567,11 @@ app.get("/api/profile", verifyToken, async (req, res) => {
           address: teacher.address || "Not provided",
           profilePicture: teacher.profile_picture || "Resources/Images/default_avatar.png",
           settings: teacher.settings || { email_notifications: true, assignment_alerts: true, exam_notifications: true, theme: "dark" },
+          inchargeGradeId: teacher.incharge_grade_id,
+          inchargeGradeName: teacher.incharge_grade_name,
           stats: {
-            assignedSubjects: subjectsRes.rows.map(s => `${s.subject_name} (${s.grade_name || 'All Grades'})`)
+            assignedSubjects: subjectsRes.rows.map(s => `${s.subject_name} (${s.grade_name || 'All Grades'})`),
+            inchargeClass: teacher.incharge_grade_id ? `${teacher.incharge_grade_name || teacher.incharge_grade_id} (${teacher.incharge_grade_id})` : "None"
           }
         }
       });
@@ -1740,6 +1746,88 @@ app.post("/api/user-settings", verifyToken, async (req, res) => {
   } catch (err) {
     console.error("Save Settings Error:", err);
     res.status(500).json({ success: false, message: "Failed to save settings" });
+  }
+});
+
+// Teacher Class In-Charge Settings Management
+app.get("/api/teacher-incharge-status", verifyToken, async (req, res) => {
+  if (req.user.role !== "teacher" && req.user.role !== "admin") {
+    return res.status(403).json({ success: false, message: "Access denied" });
+  }
+  try {
+    const teacherRes = await pool.query(
+      `SELECT t.teacher_id, t.teacher_name, t.incharge_grade_id, g.grade_name AS incharge_grade_name
+       FROM teacher t
+       LEFT JOIN grade g ON t.incharge_grade_id = g.grade_id
+       WHERE t.teacher_reg_no = $1 OR t.teacher_id::text = $1 LIMIT 1`,
+      [req.user.id]
+    );
+    if (teacherRes.rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Teacher not found" });
+    }
+    const teacher = teacherRes.rows[0];
+    const allGradesRes = await pool.query("SELECT grade_id, grade_name FROM grade ORDER BY grade_id ASC");
+
+    res.json({
+      success: true,
+      incharge_grade_id: teacher.incharge_grade_id,
+      incharge_grade_name: teacher.incharge_grade_name,
+      available_grades: allGradesRes.rows
+    });
+  } catch (err) {
+    console.error("Error fetching teacher in-charge status:", err);
+    res.status(500).json({ success: false, message: "Failed to fetch in-charge status" });
+  }
+});
+
+app.post("/api/update-teacher-incharge", verifyToken, async (req, res) => {
+  if (req.user.role !== "teacher" && req.user.role !== "admin") {
+    return res.status(403).json({ success: false, message: "Access denied" });
+  }
+  const { incharge_grade_id } = req.body;
+  try {
+    const teacherRes = await pool.query(
+      "SELECT teacher_id FROM teacher WHERE teacher_reg_no = $1 OR teacher_id::text = $1 LIMIT 1",
+      [req.user.id]
+    );
+    if (teacherRes.rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Teacher account not found" });
+    }
+    const teacherId = teacherRes.rows[0].teacher_id;
+
+    let newGradeId = null;
+    let newGradeName = null;
+
+    if (incharge_grade_id && String(incharge_grade_id).trim() !== "" && incharge_grade_id !== "none") {
+      const gradeRes = await pool.query(
+        "SELECT grade_id, grade_name FROM grade WHERE grade_id = $1 OR grade_name ILIKE $2 LIMIT 1",
+        [incharge_grade_id, incharge_grade_id]
+      );
+      if (gradeRes.rows.length === 0) {
+        return res.status(400).json({ success: false, message: `Invalid grade '${incharge_grade_id}'` });
+      }
+      newGradeId = gradeRes.rows[0].grade_id;
+      newGradeName = gradeRes.rows[0].grade_name;
+    }
+
+    await pool.query(
+      "UPDATE teacher SET incharge_grade_id = $1 WHERE teacher_id = $2",
+      [newGradeId, teacherId]
+    );
+
+    const msg = newGradeId 
+      ? `Successfully updated! You are now the Class In-Charge Teacher for ${newGradeName} (${newGradeId}).` 
+      : "Successfully resigned from Class Teacher / In-Charge role. You are now in standard subject teacher mode.";
+
+    res.json({
+      success: true,
+      message: msg,
+      incharge_grade_id: newGradeId,
+      incharge_grade_name: newGradeName
+    });
+  } catch (err) {
+    console.error("Error updating teacher incharge status:", err);
+    res.status(500).json({ success: false, message: "Failed to update in-charge status: " + err.message });
   }
 });
 
