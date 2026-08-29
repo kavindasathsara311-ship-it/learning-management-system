@@ -1,4 +1,9 @@
-// admin_reports.js - Institutional Reports & Analytics Controller
+// admin_reports.js - Institutional Reports, Analytics & Graphs Controller
+
+let lineChartInstance = null;
+let doughnutChartInstance = null;
+let gradeBarChartInstance = null;
+let enrollmentChartInstance = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     renderSidebar("reports", "admin");
@@ -54,6 +59,8 @@ async function loadEnrollmentReport() {
                     </tr>
                 `;
             }).join("");
+
+            renderEnrollmentChart(data.by_grade);
         }
 
         const subTbody = document.getElementById("subjectEnrollmentTbody");
@@ -70,6 +77,56 @@ async function loadEnrollmentReport() {
     } catch (err) {
         console.error("Error loading enrollment report:", err);
     }
+}
+
+function renderEnrollmentChart(byGrade) {
+    const canvas = document.getElementById("enrollmentBarChart");
+    if (!canvas || typeof Chart === "undefined") return;
+
+    const labels = byGrade.map(g => g.grade_name || g.grade_id);
+    const counts = byGrade.map(g => parseInt(g.student_count || 0, 10));
+
+    if (enrollmentChartInstance) enrollmentChartInstance.destroy();
+
+    enrollmentChartInstance = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Enrolled Students',
+                data: counts,
+                backgroundColor: 'rgba(56, 189, 248, 0.75)',
+                borderColor: '#38bdf8',
+                borderWidth: 1.5,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1e293b',
+                    titleColor: '#ffffff',
+                    bodyColor: '#cbd5e1',
+                    borderColor: 'rgba(255,255,255,0.2)',
+                    borderWidth: 1
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.06)' },
+                    ticks: { color: '#94a3b8' }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255,255,255,0.06)' },
+                    ticks: { color: '#94a3b8', precision: 0 }
+                }
+            }
+        }
+    });
 }
 
 async function loadAttendanceReport() {
@@ -106,8 +163,199 @@ async function loadAttendanceReport() {
                 `;
             }).join("");
         }
+
+        // Render Attendance Graphs
+        renderAttendanceGraphs(overall, data.by_grade || [], data.daily_trends || []);
+
     } catch (err) {
         console.error("Error loading attendance report:", err);
+    }
+}
+
+function renderAttendanceGraphs(overall, byGrade, dailyTrends) {
+    if (typeof Chart === "undefined") return;
+
+    // 1. Line Chart: Daily Attendance Timeline
+    const lineCanvas = document.getElementById("dailyAttendanceLineChart");
+    if (lineCanvas) {
+        let labels = [];
+        let presentData = [];
+        let absentData = [];
+        let lateData = [];
+
+        if (dailyTrends && dailyTrends.length > 0) {
+            labels = dailyTrends.map(d => formatDate(d.date));
+            presentData = dailyTrends.map(d => parseInt(d.present || 0, 10));
+            absentData = dailyTrends.map(d => parseInt(d.absent || 0, 10));
+            lateData = dailyTrends.map(d => parseInt(d.late || 0, 10));
+        } else {
+            labels = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+            presentData = [overall.present_count || 0, overall.present_count || 0, overall.present_count || 0, overall.present_count || 0, overall.present_count || 0];
+            absentData = [overall.absent_count || 0, overall.absent_count || 0, overall.absent_count || 0, overall.absent_count || 0, overall.absent_count || 0];
+            lateData = [overall.late_count || 0, overall.late_count || 0, overall.late_count || 0, overall.late_count || 0, overall.late_count || 0];
+        }
+
+        if (lineChartInstance) lineChartInstance.destroy();
+
+        lineChartInstance = new Chart(lineCanvas, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Present',
+                        data: presentData,
+                        borderColor: '#22c55e',
+                        backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    },
+                    {
+                        label: 'Absent',
+                        data: absentData,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    },
+                    {
+                        label: 'Late',
+                        data: lateData,
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { color: '#cbd5e1', font: { size: 12, weight: 'bold' }, usePointStyle: true }
+                    },
+                    tooltip: {
+                        backgroundColor: '#0f172a',
+                        borderColor: 'rgba(255,255,255,0.2)',
+                        borderWidth: 1,
+                        padding: 10
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255,255,255,0.06)' },
+                        ticks: { color: '#94a3b8' }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255,255,255,0.06)' },
+                        ticks: { color: '#94a3b8', precision: 0 }
+                    }
+                }
+            }
+        });
+    }
+
+    // 2. Doughnut Chart: Overall Status Ratio
+    const pieCanvas = document.getElementById("attendanceDoughnutChart");
+    if (pieCanvas) {
+        const present = parseInt(overall.present_count || 0, 10);
+        const absent = parseInt(overall.absent_count || 0, 10);
+        const late = parseInt(overall.late_count || 0, 10);
+
+        if (doughnutChartInstance) doughnutChartInstance.destroy();
+
+        doughnutChartInstance = new Chart(pieCanvas, {
+            type: 'doughnut',
+            data: {
+                labels: ['Present', 'Absent', 'Late'],
+                datasets: [{
+                    data: [present, absent, late],
+                    backgroundColor: ['#22c55e', '#ef4444', '#f59e0b'],
+                    borderColor: '#1e293b',
+                    borderWidth: 2,
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#cbd5e1', font: { size: 12 }, usePointStyle: true }
+                    },
+                    tooltip: {
+                        backgroundColor: '#0f172a',
+                        borderColor: 'rgba(255,255,255,0.2)',
+                        borderWidth: 1
+                    }
+                },
+                cutout: '65%'
+            }
+        });
+    }
+
+    // 3. Bar Chart: Grade-Wise Attendance Rate Comparison
+    const gradeCanvas = document.getElementById("gradeAttendanceBarChart");
+    if (gradeCanvas) {
+        const labels = byGrade.map(g => g.grade_name || g.grade_id);
+        const rates = byGrade.map(g => parseFloat(g.attendance_rate || 0));
+
+        if (gradeBarChartInstance) gradeBarChartInstance.destroy();
+
+        gradeBarChartInstance = new Chart(gradeCanvas, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Attendance Rate (%)',
+                    data: rates,
+                    backgroundColor: rates.map(r => r >= 75 ? 'rgba(34, 197, 94, 0.8)' : (r >= 50 ? 'rgba(250, 204, 21, 0.8)' : 'rgba(248, 113, 113, 0.8)')),
+                    borderColor: rates.map(r => r >= 75 ? '#22c55e' : (r >= 50 ? '#facc15' : '#f87171')),
+                    borderWidth: 1.5,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#0f172a',
+                        borderColor: 'rgba(255,255,255,0.2)',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(ctx) { return ` Attendance: ${ctx.parsed.y}%`; }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255,255,255,0.06)' },
+                        ticks: { color: '#94a3b8' }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        grid: { color: 'rgba(255,255,255,0.06)' },
+                        ticks: {
+                            color: '#94a3b8',
+                            callback: function(v) { return v + '%'; }
+                        }
+                    }
+                }
+            }
+        });
     }
 }
 
@@ -178,6 +426,12 @@ async function loadCourseworkReport() {
     } catch (err) {
         console.error("Error loading coursework report:", err);
     }
+}
+
+function formatDate(isoStr) {
+    if (!isoStr) return "-";
+    const d = new Date(isoStr);
+    return isNaN(d.getTime()) ? "-" : d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 function capitalize(str) {

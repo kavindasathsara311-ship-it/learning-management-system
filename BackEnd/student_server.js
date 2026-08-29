@@ -3217,10 +3217,25 @@ app.get("/api/admin/reports/attendance", verifyToken, async (req, res) => {
       ORDER BY g.grade_id ASC
     `);
 
+    const dailyTrends = await pool.query(`
+      SELECT 
+        a.date,
+        COUNT(a.attendance_id) AS total,
+        COUNT(a.attendance_id) FILTER (WHERE a.status = 'Present') AS present,
+        COUNT(a.attendance_id) FILTER (WHERE a.status = 'Absent') AS absent,
+        COUNT(a.attendance_id) FILTER (WHERE a.status = 'Late') AS late,
+        ROUND((COUNT(a.attendance_id) FILTER (WHERE a.status = 'Present')::decimal / NULLIF(COUNT(a.attendance_id), 0) * 100), 1) AS rate
+      FROM attendance a
+      GROUP BY a.date
+      ORDER BY a.date ASC
+      LIMIT 30
+    `);
+
     res.json({
       success: true,
       overall: stats.rows[0] || {},
-      by_grade: gradeBreakdown.rows
+      by_grade: gradeBreakdown.rows,
+      daily_trends: dailyTrends.rows
     });
   } catch (err) {
     console.error("Error loading attendance report:", err);
