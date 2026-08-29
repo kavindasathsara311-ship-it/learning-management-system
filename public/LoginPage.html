@@ -74,6 +74,7 @@
                     <nav class="navBarSignUp">
                         <p id="studentSignUp">Student</p>
                         <p id="teacherSignUp">Teacher</p>
+                        <p id="adminSignUp">Admin</p>
                     </nav>
 
                     <!-- Student Sign Up Form -->
@@ -110,9 +111,37 @@
                         <div id="dynamicSubjectsContainer" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
                             <!-- Dynamic inputs will be injected here via JS -->
                         </div>
+                        <datalist id="teacherSubjectOptions"></datalist>
+
+                        <!-- Class In-Charge Section -->
+                        <div style="width: 25vw; margin: 15px auto 5px auto; display: flex; align-items: center; justify-content: flex-start; gap: 8px; color: white;">
+                            <input type="checkbox" id="teacherIsInCharge" style="cursor: pointer; width: 16px; height: 16px; margin: 0;">
+                            <label for="teacherIsInCharge" style="font-size: 13px; cursor: pointer; user-select: none;">Are you a Class In-Charge Teacher?</label>
+                        </div>
+                        <div id="inchargeClassContainer" style="display: none; width: 25vw; margin: 8px auto;">
+                            <select id="teacherInchargeGrade" style="width: 100%; height: 5vh; background: #1e293b; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; color: white; padding: 0 10px; font-size: 13px;">
+                                <option value="">-- Select In-Charge Class / Grade --</option>
+                            </select>
+                        </div>
+
                         <input type="password" id="signUpTeacherPassword" name="password" required
                             placeholder="Password">
                         <button type="button" id="signUpTeacherButton" class="SignUpButton">Sign Up</button>
+                    </div>
+
+                    <!-- Admin Sign Up Form -->
+
+                    <div class="adminSignUpForm" id="adminSignUpForm" style="display: none;">
+                        <input type="text" id="signUpAdminName" name="username" required placeholder="Admin Full Name"
+                            autofocus>
+                        <input type="text" id="signUpAdminRegisterNumber" name="userRegisterNumber" required
+                            placeholder="Admin Employee ID (e.g. ADM002)">
+                        <input type="email" id="signUpAdminEmail" name="email" required placeholder="Official Admin Email">
+                        <input type="number" id="signUpAdminPhoneNumber" name="phoneNumber" required
+                            placeholder="Admin Phone Number">
+                        <input type="password" id="signUpAdminPassword" name="password" required
+                            placeholder="Password">
+                        <button type="button" id="signUpAdminButton" class="SignUpButton">Register Admin</button>
                     </div>
 
                     <p class="BackToLogIn" id="BackToLogIn">Back to Login</p>

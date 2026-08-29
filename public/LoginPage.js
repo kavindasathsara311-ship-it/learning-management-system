@@ -46,6 +46,17 @@ const signUpTeacherSubjectCount = document.getElementById('signUpTeacherSubjectC
 const dynamicSubjectsContainer = document.getElementById('dynamicSubjectsContainer');
 const signUpTeacherButton = document.getElementById('signUpTeacherButton');
 
+// sign up form inputs and button for admin
+const adminSignUp = document.getElementById('adminSignUp');
+const adminSignUpForm = document.getElementById('adminSignUpForm');
+const signUpAdminName = document.getElementById('signUpAdminName');
+const signUpAdminRegisterNumber = document.getElementById('signUpAdminRegisterNumber');
+const signUpAdminEmail = document.getElementById('signUpAdminEmail');
+const signUpAdminPhoneNumber = document.getElementById('signUpAdminPhoneNumber');
+const signUpAdminPassword = document.getElementById('signUpAdminPassword');
+const signUpAdminButton = document.getElementById('signUpAdminButton');
+const LogInAdminSubmitButton = document.getElementById('LogInAdminSubmitButton');
+
 // student and teacher sign up 
 const studentSignUp = document.getElementById('studentSignUp');
 const teacherSignUp = document.getElementById('teacherSignUp');
@@ -58,6 +69,49 @@ const studentName = document.getElementById('studentName');
 const otpWrapper = document.getElementById('otpWrapper');
 const otpDigits = document.querySelectorAll('.otp-digit');
 const verifyOtpButton = document.getElementById('verifyOtpButton');
+
+// Teacher In-Charge Elements
+const teacherIsInCharge = document.getElementById('teacherIsInCharge');
+const inchargeClassContainer = document.getElementById('inchargeClassContainer');
+const teacherInchargeGrade = document.getElementById('teacherInchargeGrade');
+
+// Load Grades & Subjects Catalogs
+async function loadSignUpCatalogs() {
+    try {
+        // 1. Load Grades
+        const gradesRes = await fetch('/api/grades');
+        const grades = await gradesRes.json();
+        const gradeOptions = document.getElementById('gradeOptions');
+        if (gradeOptions && Array.isArray(grades)) {
+            gradeOptions.innerHTML = grades.map(g => `<option value="${g.grade_id}">${g.grade_name}</option>`).join('');
+        }
+        if (teacherInchargeGrade && Array.isArray(grades)) {
+            teacherInchargeGrade.innerHTML = `<option value="">-- Select In-Charge Class / Grade --</option>` +
+                grades.map(g => `<option value="${g.grade_id}">${g.grade_name} (${g.grade_id})</option>`).join('');
+        }
+
+        // 2. Load Subjects
+        const subjRes = await fetch('/api/available-subjects-catalog');
+        const subjData = await subjRes.json();
+        const teacherSubjectOptions = document.getElementById('teacherSubjectOptions');
+        if (teacherSubjectOptions && subjData.success && Array.isArray(subjData.catalog)) {
+            teacherSubjectOptions.innerHTML = subjData.catalog.map(s => 
+                `<option value="${s.subject_id}">${s.subject_name} - ${s.grade_name || s.grade_id} (${s.subject_id})</option>`
+            ).join('');
+        }
+    } catch (e) {
+        console.error("Error loading signup catalogs:", e);
+    }
+}
+document.addEventListener('DOMContentLoaded', loadSignUpCatalogs);
+
+if (teacherIsInCharge) {
+    teacherIsInCharge.addEventListener('change', () => {
+        if (inchargeClassContainer) {
+            inchargeClassContainer.style.display = teacherIsInCharge.checked ? 'block' : 'none';
+        }
+    });
+}
 const resendOtpButton = document.getElementById('resendOtpButton');
 const cancelOtp = document.getElementById('cancelOtp');
 
@@ -139,17 +193,32 @@ BackToLogIn.addEventListener('click', () => {
 studentSignUp.addEventListener('click', () => {
     studentSignUpForm.style.display = 'block';
     teacherSignUpForm.style.display = 'none';
+    if (adminSignUpForm) adminSignUpForm.style.display = 'none';
 
     studentSignUp.style.borderBottom = '4px solid white';
     teacherSignUp.style.border = 'none';
+    if (adminSignUp) adminSignUp.style.border = 'none';
 });
 teacherSignUp.addEventListener('click', () => {
     teacherSignUpForm.style.display = 'block';
     studentSignUpForm.style.display = 'none';
+    if (adminSignUpForm) adminSignUpForm.style.display = 'none';
 
     studentSignUp.style.borderBottom = 'none';
     teacherSignUp.style.borderBottom = '4px solid white';
+    if (adminSignUp) adminSignUp.style.border = 'none';
 });
+if (adminSignUp) {
+    adminSignUp.addEventListener('click', () => {
+        studentSignUpForm.style.display = 'none';
+        teacherSignUpForm.style.display = 'none';
+        if (adminSignUpForm) adminSignUpForm.style.display = 'block';
+
+        studentSignUp.style.borderBottom = 'none';
+        teacherSignUp.style.borderBottom = 'none';
+        adminSignUp.style.borderBottom = '4px solid white';
+    });
+}
 
 signUpTeacherSubjectCount.addEventListener('input', () => {
     let count = parseInt(signUpTeacherSubjectCount.value);
@@ -164,6 +233,7 @@ signUpTeacherSubjectCount.addEventListener('input', () => {
         const input = document.createElement('input');
         input.type = 'text';
         input.className = 'dynamic-subject-input';
+        input.setAttribute('list', 'teacherSubjectOptions');
         // Applying the same styles as other inputs logically
         input.style.width = '25vw';
         input.style.height = '5vh';
@@ -171,10 +241,10 @@ signUpTeacherSubjectCount.addEventListener('input', () => {
         input.style.border = 'none';
         input.style.background = 'transparent';
         input.style.borderBottom = '2px solid white';
-        input.style.marginTop = '3vh';
+        input.style.marginTop = '2vh';
         input.style.color = 'white';
         input.style.fontSize = '13px';
-        input.placeholder = `Teaching Subject ${i + 1}`;
+        input.placeholder = `Select Teaching Subject ${i + 1} (e.g. s1001A)`;
         input.required = true;
         dynamicSubjectsContainer.appendChild(input);
     }
@@ -460,8 +530,50 @@ signUpTeacherButton.addEventListener('click', (e) => {
         return;
     }
 
+    if (teacherIsInCharge && teacherIsInCharge.checked) {
+        if (!teacherInchargeGrade.value) {
+            alert("Please select the class / grade you are in charge of.");
+            teacherInchargeGrade.focus();
+            return;
+        }
+    }
+
     addTeacher();
 });
+
+if (signUpAdminButton) {
+    signUpAdminButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!signUpAdminName.value.trim()) {
+            alert("Please enter Admin full name.");
+            signUpAdminName.focus();
+            return;
+        }
+        if (!signUpAdminEmail.value.trim() || !signUpAdminEmail.value.trim().match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)) {
+            alert("Please enter a valid official email address.");
+            signUpAdminEmail.focus();
+            return;
+        }
+        if (!signUpAdminPassword.value.trim() || signUpAdminPassword.value.length < 6) {
+            alert("Please enter a valid password (at least 6 characters).");
+            signUpAdminPassword.focus();
+            return;
+        }
+        addAdmin();
+    });
+}
+
+function addAdmin() {
+    const userData = {
+        name: signUpAdminName.value.trim(),
+        id: signUpAdminRegisterNumber.value.trim() || "ADM" + Math.floor(100 + Math.random() * 900),
+        email: signUpAdminEmail.value.trim(),
+        phone: signUpAdminPhoneNumber.value.trim() || "",
+        password: signUpAdminPassword.value,
+        role: 'admin'
+    };
+    initiateRegistration(userData);
+}
 
 // ***** Function to add student and teacher (Backend API calls) **************#######
 
@@ -484,6 +596,9 @@ function addTeacher() {
     const subjectInputs = dynamicSubjectsContainer.querySelectorAll('.dynamic-subject-input');
     const teachingSubjectsArray = Array.from(subjectInputs).map(inp => inp.value.trim());
 
+    const isChecked = teacherIsInCharge ? teacherIsInCharge.checked : false;
+    const inchargeGradeVal = isChecked && teacherInchargeGrade ? teacherInchargeGrade.value : null;
+
     const userData = {
         name: signUpTeacherName.value,
         id: signUpTeacherRegisterNumber.value,
@@ -491,6 +606,8 @@ function addTeacher() {
         phone: signUpTeacherTelePhoneNumber.value,
         password: signUpTeacherPassword.value,
         teachingSubjects: teachingSubjectsArray,
+        is_incharge: isChecked,
+        incharge_grade_id: inchargeGradeVal,
         role: 'teacher'
     };
     initiateRegistration(userData);
@@ -547,6 +664,8 @@ verifyOtpButton.addEventListener('click', () => {
                     window.location.href = "Student_Dashboard.html";
                 } else if (data.message.toLowerCase().includes("teacher")) {
                     window.location.href = "Teacher_Dashboard.html";
+                } else if (data.message.toLowerCase().includes("admin")) {
+                    window.location.href = "Admin_Dashboard.html";
                 } else {
                     window.location.href = "LoginPage.html";
                 }
@@ -627,6 +746,34 @@ LogInTeacherSubmitButton.addEventListener('click', (e) => {
             alert("Teacher login failed");
         });
 });
+
+if (LogInAdminSubmitButton) {
+    LogInAdminSubmitButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        fetch("/admin-login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                email: LogInAdminusername.value,
+                password: LogInAdminpassword.value
+            })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    localStorage.setItem('token', data.token);
+                    window.location.href = "Admin_Dashboard.html";
+                } else {
+                    alert(data.message || "Invalid credentials");
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Admin login failed");
+            });
+    });
+}
 
 // Load available grade options from server
 fetch("/api/grades")

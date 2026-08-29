@@ -4,19 +4,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Settings</title>
+    <title>Account Settings - LMS</title>
     <link rel="stylesheet" href="Student_Dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         .settingsWrapper {
-            padding: 30px;
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
         }
 
         .settingsCard {
             background: #ffffff;
             border-radius: 16px;
             padding: 30px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
             margin-bottom: 30px;
         }
 
@@ -47,7 +49,8 @@
             color: #475569;
         }
 
-        .settingItem input[type="password"] {
+        .settingItem input[type="password"],
+        .settingItem select {
             width: 100%;
             padding: 10px 14px;
             border-radius: 8px;
@@ -101,6 +104,26 @@
             background: #00acc1;
             transform: translateY(-2px);
         }
+
+        .dangerBtn {
+            background: #ef4444;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+        }
+
+        .dangerBtn:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 
@@ -110,6 +133,35 @@
 
         <div class="dashboardContainer DashboardPart" id="dashboardContainer" style="padding: 30px; overflow-y: auto; height: 94vh;">
             <div class="settingsWrapper">
+
+                <!-- Teacher Class In-Charge Management Card (Visible for Teachers) -->
+                <div class="settingsCard" id="teacherInchargeCard" style="display: none;">
+                    <div class="settingsTitle">
+                        <i class="fa fa-user-shield" style="color: #00bcd4;"></i> Class Teacher / In-Charge Status
+                    </div>
+
+                    <div id="inchargeCurrentStatusView" style="margin-bottom: 20px;">
+                        <!-- Rendered dynamically -->
+                    </div>
+
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+                        <label style="display: block; font-size: 14px; font-weight: bold; color: #1e293b; margin-bottom: 8px;">
+                            <i class="fa fa-graduation-cap" style="color: #00bcd4;"></i> Become Class In-Charge / Change Class
+                        </label>
+                        <p style="font-size: 13px; color: #64748b; margin-top: 0; margin-bottom: 12px;">
+                            Select a class from the list below to become its official Class In-Charge teacher and gain full daily attendance marking rights.
+                        </p>
+                        <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                            <select id="selectInchargeGrade" style="flex: 1; min-width: 260px; padding: 10px 14px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px;">
+                                <option value="">-- Select Class / Grade --</option>
+                            </select>
+                            <button type="button" class="saveBtn" onclick="handleAssignClassTeacher()">
+                                <i class="fa fa-user-check"></i> Save In-Charge Class
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Security Card -->
                 <div class="settingsCard">
                     <div class="settingsTitle">
@@ -134,30 +186,6 @@
                             <button type="submit" class="saveBtn"><i class="fa fa-key"></i> Update Password</button>
                         </div>
                     </form>
-                </div>
-
-                <!-- Appearance & Display Card -->
-                <div class="settingsCard">
-                    <div class="settingsTitle">
-                        <i class="fa fa-palette" style="color: #00bcd4;"></i> Theme & Interface
-                    </div>
-                    <div class="inputGrid">
-                        <div class="settingItem">
-                            <label>System Theme</label>
-                            <select id="themeSelect" onchange="previewTheme(this.value)">
-                                <option value="light">Default (Blue / Light Theme)</option>
-                                <option value="dark">Dark Slate Theme</option>
-                            </select>
-                        </div>
-                        <div class="settingItem">
-                            <label>Display Language</label>
-                            <select id="languageSelect">
-                                <option value="en">English (United States)</option>
-                                <option value="si">Sinhala</option>
-                                <option value="ta">Tamil</option>
-                            </select>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Notifications & Alerts Card -->
@@ -188,8 +216,9 @@
 
     <script src="dashboard.js"></script>
     <script>
+        let currentUserRole = "student";
+
         document.addEventListener("DOMContentLoaded", () => {
-            renderSidebar("settings");
             loadUserSettings();
         });
 
@@ -201,18 +230,146 @@
             }
 
             try {
-                const response = await fetch("http://localhost:3000/api/profile", {
+                const response = await fetch("/api/profile", {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
                 const data = await response.json();
                 if (data.success && data.user) {
+                    currentUserRole = data.user.role || "student";
+                    renderSidebar("settings", currentUserRole);
+
                     const settings = data.user.settings || {};
                     document.getElementById("emailNotifCheck").checked = settings.email_notifications !== false;
                     document.getElementById("assignmentAlertCheck").checked = settings.assignment_alerts !== false;
                     document.getElementById("examAlertCheck").checked = settings.exam_notifications !== false;
+
+                    if (currentUserRole === "teacher") {
+                        loadTeacherInchargeStatus();
+                    }
+                } else {
+                    renderSidebar("settings", "student");
                 }
             } catch (err) {
                 console.error("Settings load error:", err);
+                renderSidebar("settings", "student");
+            }
+        }
+
+        async function loadTeacherInchargeStatus() {
+            const token = localStorage.getItem("token");
+            const inchargeCard = document.getElementById("teacherInchargeCard");
+            const statusView = document.getElementById("inchargeCurrentStatusView");
+            const gradeSelect = document.getElementById("selectInchargeGrade");
+
+            if (!inchargeCard || !statusView || !gradeSelect) return;
+            inchargeCard.style.display = "block";
+
+            try {
+                const res = await fetch("/api/teacher-incharge-status", {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                if (!data.success) return;
+
+                // Populate Grade Select
+                if (Array.isArray(data.available_grades)) {
+                    gradeSelect.innerHTML = `<option value="">-- Select Class / Grade --</option>` +
+                        data.available_grades.map(g => `<option value="${g.grade_id}">${g.grade_name} (${g.grade_id})</option>`).join('');
+                }
+
+                // Render Current Status View
+                if (data.incharge_grade_id) {
+                    statusView.innerHTML = `
+                        <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; border-radius: 12px; padding: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+                            <div>
+                                <div style="font-size: 12px; color: #16a34a; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Active Status</div>
+                                <div style="font-size: 17px; font-weight: bold; color: #0f172a; margin-top: 4px;">
+                                    🌟 Class In-Charge: <strong style="color: #16a34a;">${escapeHtml(data.incharge_grade_name || data.incharge_grade_id)} (${escapeHtml(data.incharge_grade_id)})</strong>
+                                </div>
+                                <div style="font-size: 13px; color: #64748b; margin-top: 4px;">
+                                    You have full daily attendance marking rights for this class roster.
+                                </div>
+                            </div>
+                            <button type="button" class="dangerBtn" onclick="handleResignClassTeacher()">
+                                <i class="fa fa-user-minus"></i> Resign from Class Teacher
+                            </button>
+                        </div>
+                    `;
+                    gradeSelect.value = data.incharge_grade_id;
+                } else {
+                    statusView.innerHTML = `
+                        <div style="background: rgba(100, 116, 139, 0.08); border: 1px solid #cbd5e1; border-radius: 12px; padding: 20px;">
+                            <div style="font-size: 12px; color: #64748b; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Current Status</div>
+                            <div style="font-size: 16px; font-weight: bold; color: #0f172a; margin-top: 4px;">
+                                ℹ️ You are not currently assigned as a Class In-Charge teacher.
+                            </div>
+                            <div style="font-size: 13px; color: #64748b; margin-top: 4px;">
+                                You have view-only attendance access for your teaching subjects. Select a class below if you wish to become its class teacher.
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                console.error("Error loading in-charge status:", err);
+            }
+        }
+
+        async function handleAssignClassTeacher() {
+            const gradeSelect = document.getElementById("selectInchargeGrade");
+            const selectedGrade = gradeSelect ? gradeSelect.value : "";
+
+            if (!selectedGrade) {
+                alert("Please select a class / grade to become in-charge of.");
+                return;
+            }
+
+            const token = localStorage.getItem("token");
+            try {
+                const response = await fetch("/api/update-teacher-incharge", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ incharge_grade_id: selectedGrade })
+                });
+
+                const data = await response.json();
+                alert(data.message);
+                if (data.success) {
+                    loadTeacherInchargeStatus();
+                }
+            } catch (err) {
+                console.error("Error updating incharge status:", err);
+                alert("Failed to update Class In-Charge status.");
+            }
+        }
+
+        async function handleResignClassTeacher() {
+            if (!confirm("Are you sure you want to resign as the Class In-Charge Teacher? You will switch to view-only attendance mode for your classes.")) {
+                return;
+            }
+
+            const token = localStorage.getItem("token");
+            try {
+                const response = await fetch("/api/update-teacher-incharge", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ incharge_grade_id: null })
+                });
+
+                const data = await response.json();
+                alert(data.message);
+                if (data.success) {
+                    loadTeacherInchargeStatus();
+                }
+            } catch (err) {
+                console.error("Error resigning from incharge status:", err);
+                alert("Failed to resign from class in-charge role.");
             }
         }
 
@@ -229,7 +386,7 @@
 
             const token = localStorage.getItem("token");
             try {
-                const response = await fetch("http://localhost:3000/api/change-password", {
+                const response = await fetch("/api/change-password", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -259,7 +416,7 @@
 
             const token = localStorage.getItem("token");
             try {
-                const response = await fetch("http://localhost:3000/api/user-settings", {
+                const response = await fetch("/api/user-settings", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -274,6 +431,17 @@
                 console.error("Save settings error:", err);
                 alert("Failed to save settings.");
             }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return "";
+            return String(str).replace(/[&<>"']/g, m => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[m]));
         }
     </script>
 </body>
