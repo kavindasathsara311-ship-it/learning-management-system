@@ -1,46 +1,215 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Admin Dashboard</title>
-        <link rel="stylesheet" href="Admin_Dashboard.css">
-    </head>
-    <body>
-        <div class="layoutDashboard">
-            <nav class="topNavBar DashboardPart">
-                <h1 class="dashboardMainText">Dashboard</h1>
-                <a>Subjects</a>
-                <a>Exams</a> 
-                <a>TimeTable</a>
-                <a>Subjects</a>
-                <a>Settings</a>
-                <a>Profile</a>
-                <a>Log Out</a>
-            </nav>
-            <div class="dashboardContainer DashboardPart">
-                <div>
-                    <h1>Good Morning</h1>
-                    <h1>Welcome Admin</h1>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard & Attendance</title>
+    <link rel="stylesheet" href="Admin_Dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .adminGrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .adminCard {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        .adminCard h3 {
+            margin: 0 0 10px 0;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #aaa;
+        }
+        .adminCard .val {
+            font-size: 34px;
+            font-weight: bold;
+            color: #00bcd4;
+        }
+        .adminTable {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 10px;
+            overflow: hidden;
+            color: #fff;
+            margin-bottom: 30px;
+        }
+        .adminTable th, .adminTable td {
+            padding: 14px 18px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .adminTable th {
+            background: rgba(255, 255, 255, 0.15);
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+        .filterBar {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 25px;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 15px 20px;
+            border-radius: 10px;
+        }
+        .filterBar label {
+            color: #ccc;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        .filterBar input {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: #2b2b3d;
+            color: #fff;
+        }
+        .filterBtn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            background: #00bcd4;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layoutDashboard">
+        <nav class="topNavBar DashboardPart">
+            <h1 class="dashboardMainText">Admin Dashboard</h1>
+            <a><i class="fas fa-book"></i> Subjects</a>
+            <a><i class="fas fa-calendar"></i> Exams</a>
+            <a><i class="fas fa-clock"></i> TimeTable</a>
+            <a><i class="fas fa-user-check"></i> Daily Attendance</a>
+            <a href="profile.html"><i class="fas fa-user"></i> Profile</a>
+            <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+            <a class="logOutButton"><i class="fas fa-sign-out-alt"></i> Log Out</a>
+        </nav>
+        <div class="dashboardContainer DashboardPart" style="padding: 25px; overflow-y: auto; height: 100vh;">
+            <div style="margin-bottom: 20px;">
+                <h1 style="color: #fff; margin: 0;">School Attendance Control & Overview</h1>
+                <p style="color: #bbb; margin-top: 5px;">Monitor student attendance matching across teachers, grades, and classes.</p>
+            </div>
+
+            <div class="filterBar">
+                <label><i class="fas fa-calendar-alt"></i> Attendance Date:</label>
+                <input type="date" id="adminAttendanceDate">
+                <button class="filterBtn" onclick="loadAdminAttendance()"><i class="fas fa-sync"></i> Refresh Overview</button>
+            </div>
+
+            <!-- Overview Metrics -->
+            <div class="adminGrid">
+                <div class="adminCard">
+                    <h3>School Attendance Rate</h3>
+                    <div class="val" id="adminPct">--%</div>
                 </div>
-                <div class="cards-container">
-                    <div class="card">
-                        <h2>Students</h2>
-                        <p>Student count</p>
-                    </div>
-                    <div class="card">
-                        <h2>Teachers</h2>
-                        <p>Teacher count</p>
-                    </div>
-                    <div class="card">
-                        <h2>Exams</h2>
-                        <p>View Your Schedule</p>
-                    </div>
-                    <div class="upcomingAssigmentContainer">
-                        <p>Assignments upcoming</p>
-                    </div>
+                <div class="adminCard">
+                    <h3>Total Enrolled Students</h3>
+                    <div class="val" style="color: #fff;" id="adminTotal">0</div>
+                </div>
+                <div class="adminCard">
+                    <h3>Total Present</h3>
+                    <div class="val" style="color: #4CAF50;" id="adminPresent">0</div>
+                </div>
+                <div class="adminCard">
+                    <h3>Total Absent</h3>
+                    <div class="val" style="color: #f44336;" id="adminAbsent">0</div>
                 </div>
             </div>
+
+            <!-- Grade-by-Grade Attendance Breakdown -->
+            <h3 style="color: #fff; margin: 25px 0 15px 0;"><i class="fas fa-school"></i> Grade-by-Grade Daily Attendance</h3>
+            <table class="adminTable">
+                <thead>
+                    <tr>
+                        <th>Grade Code</th>
+                        <th>Grade Name</th>
+                        <th>Student Count</th>
+                        <th>Present</th>
+                        <th>Absent</th>
+                        <th>Late</th>
+                        <th>Attendance Rate</th>
+                    </tr>
+                </thead>
+                <tbody id="adminGradeTbody">
+                    <tr><td colspan="7" style="text-align: center;">Loading admin attendance summary...</td></tr>
+                </tbody>
+            </table>
         </div>
-    </body>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const dateInput = document.getElementById("adminAttendanceDate");
+            if (dateInput) {
+                dateInput.value = new Date().toISOString().split("T")[0];
+            }
+            loadAdminAttendance();
+        });
+
+        async function loadAdminAttendance() {
+            const dateInput = document.getElementById("adminAttendanceDate");
+            const date = dateInput ? dateInput.value : "";
+
+            const token = localStorage.getItem("token");
+            if (!token) return;
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/admin-attendance-summary?date=${encodeURIComponent(date)}`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                if (!data.success) return;
+
+                document.getElementById("adminPct").textContent = `${data.summary.percentage}%`;
+                document.getElementById("adminTotal").textContent = data.summary.total_students;
+                document.getElementById("adminPresent").textContent = data.summary.present_count;
+                document.getElementById("adminAbsent").textContent = data.summary.absent_count;
+
+                const tbody = document.getElementById("adminGradeTbody");
+                tbody.innerHTML = "";
+
+                if (data.gradeBreakdown.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center;">No grades found.</td></tr>`;
+                    return;
+                }
+
+                data.gradeBreakdown.forEach(g => {
+                    const rate = g.student_count > 0 ? Math.round(((g.present_count + g.late_count) / g.student_count) * 100) : 0;
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td><strong>${g.grade_id}</strong></td>
+                        <td>${g.grade_name}</td>
+                        <td>${g.student_count}</td>
+                        <td style="color: #4CAF50; font-weight: bold;">${g.present_count}</td>
+                        <td style="color: #f44336; font-weight: bold;">${g.absent_count}</td>
+                        <td style="color: #ff9800; font-weight: bold;">${g.late_count}</td>
+                        <td><strong>${rate}%</strong></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+            } catch (err) {
+                console.error("Error loading admin attendance:", err);
+            }
+        }
+    </script>
+</body>
+
 </html>

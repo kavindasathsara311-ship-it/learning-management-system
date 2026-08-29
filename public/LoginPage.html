@@ -45,7 +45,7 @@
                         <p class="ForgotPass">Forgot Password?</p>
                         <p class="signUp" id="signUp"><a>Don't have an account? Sign Up</a></p>
 
-                        <button type="submit" id="LogInTeacherSubmitButton" class="submitButton">Log in</button>
+                        <button type="button" id="LogInTeacherSubmitButton" class="submitButton">Log in</button>
                     </div>
 
                     <!-- Admin Login Form -->
@@ -58,7 +58,7 @@
                         <p class="ForgotPass">Forgot Password?</p>
                         <p class="signUp" id="signUp"><a>Don't have an account? Sign Up</a></p>
 
-                        <button type="submit" id="LogInAdminSubmitButton" class="submitButton">Log in</button>
+                        <button type="button" id="LogInAdminSubmitButton" class="submitButton">Log in</button>
                     </div>
 
                 </fieldset>
@@ -87,7 +87,8 @@
                         <input type="email" id="signUpStudentEmail" name="email" required placeholder="User Email">
                         <input type="number" id="signUpStudentPhoneNumber" name="phoneNumber" required
                             placeholder="User Phone Number">
-                        <input type="text" id="signUpStudentGrade" name="grade" required placeholder="User Grade">
+                        <input type="text" id="signUpStudentGrade" name="grade" list="gradeOptions" required placeholder="User Grade (e.g. 1A, 2A, 10A, 12APS)">
+                        <datalist id="gradeOptions"></datalist>
                         <input type="password" id="signUpStudentPassword" name="password" required
                             placeholder="Password">
 

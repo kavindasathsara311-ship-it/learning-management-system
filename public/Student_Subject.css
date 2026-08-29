@@ -6,61 +6,114 @@ body {
   background-color: rgba(23, 36, 178, 0.85);
 }
 .layoutDashboard{
+    display: flex;
     flex-direction: row;
     width: 100vw;
-    height: 100vh;
+    min-height: 100vh;
 }
-.topNavBar{
-    width: 15%;
+#sidebar, .topNavBar{
+    width: 230px;
+    min-width: 230px;
+    max-width: 230px;
     height: 100vh;
     position: fixed;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    color:white;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    box-shadow: none !important;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
+    padding: 15px 0 20px 0;
+    overflow: hidden;
+    background-color: transparent !important;
+    border: none !important;
+    z-index: 1000;
+}
+.dashboardMainText {
+    font-size: 22px;
+    font-weight: 800;
+    text-align: center;
+    margin: 10px 0 15px 0;
+    color: #ffffff;
+    letter-spacing: 0.5px;
 }
 .navBarMiddle{
-    width: 80%;
-    margin: 10vh auto;
-    border-top: 1px solid rgb(40, 40, 40);
-    border-bottom: 1px solid rgb(60, 60, 60);
+    width: 90%;
+    margin: 0 auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.navBarMiddle::-webkit-scrollbar {
+    width: 4px;
+}
+.navBarMiddle::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
 }
 .NavBarFooter{
-    border-top: 1px solid rgb(66, 66, 66);
-    border-bottom: 1px solid rgb(59, 59, 59);
-    width: 80%;
-    margin: 13vh auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    width: 90%;
+    margin: 10px auto 0 auto;
+    padding-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 .navLink{
-    display: block;
-    color: rgb(246, 242, 242);
+    display: flex;
+    align-items: center;
+    color: rgba(255, 255, 255, 0.92);
     text-decoration: none;
-    font-size: 1.2vw;
-    font-weight:750;
-    width: 80%;
-    border-radius: 20px;
-    height: 5%;
-    margin: 3vh auto;
-    line-height: 5vh;
+    font-size: 15px;
+    font-weight: 600;
+    width: 100%;
+    border-radius: 12px;
+    padding: 10px 16px;
+    margin: 0;
+    box-sizing: border-box;
+    transition: all 0.2s ease-in-out;
+}
+.navLink i, .navLink .fa, .navLink .fas {
+    font-size: 18px;
+    margin-right: 14px;
+    width: 22px;
+    text-align: center;
+    display: inline-block;
+}
+.navLink span {
+    font-size: 15px;
+    letter-spacing: 0.2px;
 }
 .middleLinks{
-    margin-top: 1vh;
+    margin-top: 0;
 }
 .navLink:hover{
-    width: 100%;
-    color:rgba(23, 36, 178, 0.85);
-    background-color: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    transition: 0.3s;
+    color: rgba(23, 36, 178, 1);
+    background-color: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
     cursor: pointer;
 }
-.topNavBar .fa{
-    margin:0 10px 0 10px;
+.navLink.active {
+    background-color: #ffffff !important;
+    color: #1724b2 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
 }
 .subjectContainer{
-    position: absolute;
-    width: 83%;
-    margin: 10vh 15%;
+    width: calc(100% - 280px);
+    margin: 3vh 30px 3vh 260px;
     background-color: rgba(255, 255, 255, 0.7);
     border-radius: 20px;
+    box-sizing: border-box;
 }
 .DashboardPart{
     display: inline-block;
@@ -116,36 +169,69 @@ body {
     display: inline-block;
 }
 .viewEnrolledSubjects{
-    width: 80%;
-    padding: 10px 20px;
+    width: auto;
+    padding: 10px 24px;
     margin: 20px 2%;
     background-color: #2563eb;
     color: white;
     border: none;
     border-radius: 8px;
-    font-size: 16px;
+    font-size: 15px;
+    font-weight: 600;
     cursor: pointer;
+    transition: background-color 0.2s;
+}
+.viewEnrolledSubjects:hover {
+    background-color: #1d4ed8;
 }
 
 .subject_card {
-    height: 140px;
-    background: #1f2937;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    min-height: 140px;
+    background: #1e293b;
+    border-radius: 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     color: white;
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 600;
     cursor: pointer;
-    transition: 0.3s;
+    transition: all 0.3s ease;
+    padding: 20px;
+    box-sizing: border-box;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.1);
 }
 
 .subject_card:hover {
-    transform: translateY(-5px);
-    background: #2563eb;
+    transform: translateY(-4px);
+    background: #0f172a;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    border-color: #38bdf8;
 }
+
+.subjectMatBtn {
+    margin-top: 12px;
+    background: #00bcd4;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s;
+}
+
+.subjectMatBtn:hover {
+    background: #0097a7;
+}
+
 .submitButton{
     width: 20%;
     height: 40px;
@@ -157,4 +243,141 @@ body {
     border-radius: 8px;
     font-size: 16px;
     cursor: pointer;
+}
+
+/* Course Materials Modal */
+.matModalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.matModalCard {
+    background: #ffffff;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 750px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.matModalHeader {
+    padding: 20px 24px;
+    background: #1e293b;
+    color: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.matModalHeader h3 {
+    margin: 0;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.matCloseBtn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 20px;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.matCloseBtn:hover {
+    color: #ffffff;
+}
+
+.matModalBody {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.lessonGroup {
+    margin-bottom: 24px;
+}
+
+.lessonGroupHeader {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e2e8f0;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.matItemCard {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+}
+
+.matItemCard:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.matItemInfo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.matFileIcon {
+    font-size: 28px;
+    color: #ef4444; /* PDF color */
+}
+
+.matDetails h4 {
+    margin: 0 0 4px 0;
+    font-size: 15px;
+    color: #1e293b;
+}
+
+.matDetails p {
+    margin: 0;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.matDownloadBtn {
+    background: #0284c7;
+    color: #ffffff;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s;
+}
+
+.matDownloadBtn:hover {
+    background: #0369a1;
 }

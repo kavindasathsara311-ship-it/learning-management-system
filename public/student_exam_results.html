@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Exam Results</title>
+    <link rel="stylesheet" href="Student_Dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .resultsTable {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin-top: 20px;
+        }
+
+        .resultsTable th, .resultsTable td {
+            padding: 16px 20px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .resultsTable th {
+            background: #0f172a;
+            color: #00bcd4;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .gradeBadge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 13px;
+            background: #e0f2fe;
+            color: #0284c7;
+        }
+    </style>
+</head>
+
+<body id="body">
+    <div class="layoutDashboard">
+        <div id="sidebar"></div>
+
+        <div class="dashboardContainer DashboardPart" id="dashboardContainer" style="padding: 30px; overflow-y: auto; height: 94vh;">
+            <div>
+                <h2 style="margin: 0; color: #0f172a;">Exam Outcomes & Results</h2>
+                <p style="color: #64748b; margin-top: 5px;">Review your published marks and overall exam performance grades.</p>
+            </div>
+
+            <table class="resultsTable">
+                <thead>
+                    <tr>
+                        <th>Exam Name</th>
+                        <th>Subject</th>
+                        <th>Marks Obtained</th>
+                        <th>Grade</th>
+                        <th>Published Date</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsTbody">
+                    <tr><td colspan="5" style="text-align: center; color: #64748b;">Loading exam results...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            renderSidebar("results");
+            loadStudentResults();
+        });
+
+        async function loadStudentResults() {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/student-results`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                if (!data.success) return;
+
+                const tbody = document.getElementById("resultsTbody");
+                tbody.innerHTML = "";
+
+                if (!data.results || data.results.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 25px;">No published exam results found yet.</td></tr>`;
+                    return;
+                }
+
+                data.results.forEach(r => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td><strong>${r.exam_name}</strong></td>
+                        <td style="color: #00bcd4; font-weight: bold;">${r.subject_name}</td>
+                        <td><strong>${r.marks_obtained}</strong> / ${r.max_marks}</td>
+                        <td><span class="gradeBadge">${r.grade || 'A'}</span></td>
+                        <td style="color: #64748b;">${r.published_at}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+            } catch (err) {
+                console.error("Error loading results:", err);
+            }
+        }
+    </script>
+</body>
+
+</html>

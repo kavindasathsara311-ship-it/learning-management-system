@@ -4,58 +4,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teacher Dashboard</title>
+    <title>Teacher Portal - Dashboard</title>
     <link rel="stylesheet" href="Teacher_Dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+        .summaryCardLink {
+            text-decoration: none;
+            color: inherit;
+        }
+        .summaryCardLink .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 22px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .summaryCardLink .card:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.09);
+            border-color: #00bcd4;
+        }
+        .summaryCardLink h2 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .summaryCardLink p {
+            margin: 0;
+            font-size: 14px;
+            color: #cbd5e1;
+        }
+        .dashboardWidgets {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 25px;
+            margin-top: 30px;
+        }
+        @media (max-width: 900px) {
+            .dashboardWidgets {
+                grid-template-columns: 1fr;
+            }
+        }
+        .widgetCard {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 22px;
+        }
+    </style>
 </head>
 
 <body id="body">
     <div class="layoutDashboard">
-        <nav class="topNavBar DashboardPart">
-            <h3 class="dashboardMainText">Teacher Dashboard</h3>
-            <div class="navBarMiddle">
-                <a class="navLink" id="class"><i class="fas fa-chalkboard-teacher"></i> Classes</a>
-                <a class="navLink" id="exam"><i class="fas fa-file-alt"></i> Exams</a>
-                <a class="navLink" id="timeTable"><i class="fas fa-calendar-alt"></i> TimeTable</a>
-                <a class="navLink" id="attendence"><i class="fas fa-user-check"></i> Attendance</a>
-                <a class="navLink" id="assignment"><i class="fas fa-tasks"></i> Assignments</a>
-                <a class="navLink" id="notification"><i class="fas fa-bell"></i> Notifications</a>
-            </div>
-            <div class="NavBarFooter">
-                <a class="navLink"><i class="fas fa-cog"></i> Settings</a>
-                <a class="navLink"><i class="fas fa-user"></i> Profile</a>
-                <a class="navLink logOutButton"><i class="fas fa-sign-out-alt"></i> Log Out</a>
-            </div>
-        </nav>
-        <div class="dashboardContainer DashboardPart" id="dashboardContainer">
-            <div>
-                <i id="timeIcon" class="fa-solid fa-sun" style="font-size: 60px;"></i>
-                <h1 id="teacherGreeting">Good Morning</h1>                
-                <h1 class="teacherName">Welcome <span id="teacherName">Teacher</span></h1>
-            </div>
-            <div class="cards-container">
-                <div class="card">
-                    <h2>Classes</h2>
-                    <p>3 Classes Assigned</p>
-                </div>
-                <div class="card">
-                    <h2>Exams</h2> 
-                    <p>2 Upcoming Exams to Monitor</p>
-                </div>
-                <div class="card">
-                    <h2>TimeTable</h2>
-                    <p>View Your Schedule</p>
-                </div>
-                <div class="upcomingAssigmentContainer">
-                    <p>Assignments to Review</p>
-                </div>
-                <div class="announcementContainer">
+        <div id="sidebar"></div>
 
+        <div class="dashboardContainer DashboardPart" id="dashboardContainer" style="padding: 25px; overflow-y: auto; height: 94vh;">
+            <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
+                <i id="timeIcon" class="fa-solid fa-sun" style="font-size: 48px; color: #f59e0b;"></i>
+                <div>
+                    <h2 id="teacherGreeting" style="margin: 0; color: #94a3b8; font-size: 18px; font-weight: 500;">Good Morning</h2>                
+                    <h1 class="teacherName" style="margin: 4px 0 0 0; color: #fff; font-size: 26px;">Welcome <span id="teacherName" style="color: #38bdf8;">Teacher</span></h1>
+                </div>
+            </div>
+
+            <!-- KPI Metric Cards -->
+            <div class="cards-container">
+                <a href="teacher_Class.html" class="summaryCardLink">
+                    <div class="card">
+                        <h2><i class="fas fa-chalkboard-user" style="color: #00bcd4;"></i> Classes</h2>
+                        <p id="classesCountText">Loading assigned classes...</p>
+                    </div>
+                </a>
+                <a href="teacher_Exam.html" class="summaryCardLink">
+                    <div class="card">
+                        <h2><i class="fas fa-calendar" style="color: #a855f7;"></i> Exams</h2> 
+                        <p id="examsCountText">Loading upcoming exams...</p>
+                    </div>
+                </a>
+                <a href="teacher_Timetable.html" class="summaryCardLink">
+                    <div class="card">
+                        <h2><i class="fas fa-clock" style="color: #22c55e;"></i> TimeTable</h2>
+                        <p id="timetableCountText">Loading today's schedule...</p>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Widgets Row -->
+            <div class="dashboardWidgets">
+                <div class="widgetCard" id="upcomingAssignmentWidget">
+                    <p style="color: #94a3b8; margin: 0;">Loading assignments to review...</p>
+                </div>
+
+                <div class="widgetCard" id="teacherAnnouncementsWidget">
+                    <p style="color: #94a3b8; margin: 0;">Loading recent announcements...</p>
                 </div>
             </div>
         </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+    <script src="teacher_dashboard_home.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            renderSidebar("dashboard", "teacher");
+        });
+    </script>
 </body>
-<script src="dashboard.js"></script>
-<script src="teacher_Dashboard.js"></script>
 
 </html>

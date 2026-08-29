@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Settings</title>
+    <link rel="stylesheet" href="Student_Dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .settingsWrapper {
+            padding: 30px;
+        }
+
+        .settingsCard {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .settingsTitle {
+            font-size: 18px;
+            font-weight: bold;
+            color: #0f172a;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 12px;
+        }
+
+        .inputGrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .settingItem label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #475569;
+        }
+
+        .settingItem input[type="password"] {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .checkboxOption {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+
+        .checkboxOption input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #00bcd4;
+            cursor: pointer;
+        }
+
+        .checkboxOption span {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1e293b;
+        }
+
+        .saveBtn {
+            background: #00bcd4;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0, 188, 212, 0.3);
+            transition: 0.2s;
+        }
+
+        .saveBtn:hover {
+            background: #00acc1;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+
+<body id="body">
+    <div class="layoutDashboard">
+        <div id="sidebar"></div>
+
+        <div class="dashboardContainer DashboardPart" id="dashboardContainer" style="padding: 30px; overflow-y: auto; height: 94vh;">
+            <div class="settingsWrapper">
+                <!-- Security Card -->
+                <div class="settingsCard">
+                    <div class="settingsTitle">
+                        <i class="fa fa-lock" style="color: #00bcd4;"></i> Security & Password
+                    </div>
+                    <form id="changePasswordForm" onsubmit="handleChangePassword(event)">
+                        <div class="inputGrid">
+                            <div class="settingItem">
+                                <label>Current Password</label>
+                                <input type="password" id="currentPassword" required placeholder="Enter current password">
+                            </div>
+                            <div class="settingItem">
+                                <label>New Password</label>
+                                <input type="password" id="newPassword" required minlength="6" placeholder="Min 6 characters">
+                            </div>
+                            <div class="settingItem">
+                                <label>Confirm New Password</label>
+                                <input type="password" id="confirmPassword" required minlength="6" placeholder="Confirm new password">
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
+                            <button type="submit" class="saveBtn"><i class="fa fa-key"></i> Update Password</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Appearance & Display Card -->
+                <div class="settingsCard">
+                    <div class="settingsTitle">
+                        <i class="fa fa-palette" style="color: #00bcd4;"></i> Theme & Interface
+                    </div>
+                    <div class="inputGrid">
+                        <div class="settingItem">
+                            <label>System Theme</label>
+                            <select id="themeSelect" onchange="previewTheme(this.value)">
+                                <option value="light">Default (Blue / Light Theme)</option>
+                                <option value="dark">Dark Slate Theme</option>
+                            </select>
+                        </div>
+                        <div class="settingItem">
+                            <label>Display Language</label>
+                            <select id="languageSelect">
+                                <option value="en">English (United States)</option>
+                                <option value="si">Sinhala</option>
+                                <option value="ta">Tamil</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifications & Alerts Card -->
+                <div class="settingsCard">
+                    <div class="settingsTitle">
+                        <i class="fa fa-bell" style="color: #00bcd4;"></i> Notification & Alert Preferences
+                    </div>
+                    <label class="checkboxOption">
+                        <input type="checkbox" id="emailNotifCheck" checked>
+                        <span>Receive Email Notifications for School Announcements</span>
+                    </label>
+                    <label class="checkboxOption">
+                        <input type="checkbox" id="assignmentAlertCheck" checked>
+                        <span>Assignment & Grading Alert Notifications</span>
+                    </label>
+                    <label class="checkboxOption">
+                        <input type="checkbox" id="examAlertCheck" checked>
+                        <span>Exam Schedule & Daily Attendance Reminders</span>
+                    </label>
+
+                    <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                        <button class="saveBtn" onclick="saveSystemSettings()"><i class="fa fa-floppy-disk"></i> Save Preferences</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            renderSidebar("settings");
+            loadUserSettings();
+        });
+
+        async function loadUserSettings() {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                window.location.href = "LoginPage.html";
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:3000/api/profile", {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (data.success && data.user) {
+                    const settings = data.user.settings || {};
+                    document.getElementById("emailNotifCheck").checked = settings.email_notifications !== false;
+                    document.getElementById("assignmentAlertCheck").checked = settings.assignment_alerts !== false;
+                    document.getElementById("examAlertCheck").checked = settings.exam_notifications !== false;
+                }
+            } catch (err) {
+                console.error("Settings load error:", err);
+            }
+        }
+
+        async function handleChangePassword(e) {
+            e.preventDefault();
+            const currentPassword = document.getElementById("currentPassword").value;
+            const newPassword = document.getElementById("newPassword").value;
+            const confirmPassword = document.getElementById("confirmPassword").value;
+
+            if (newPassword !== confirmPassword) {
+                alert("New passwords do not match!");
+                return;
+            }
+
+            const token = localStorage.getItem("token");
+            try {
+                const response = await fetch("http://localhost:3000/api/change-password", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+
+                const data = await response.json();
+                alert(data.message);
+                if (data.success) {
+                    document.getElementById("changePasswordForm").reset();
+                }
+            } catch (err) {
+                console.error("Change password error:", err);
+                alert("Could not update password.");
+            }
+        }
+
+        async function saveSystemSettings() {
+            const settings = {
+                email_notifications: document.getElementById("emailNotifCheck").checked,
+                assignment_alerts: document.getElementById("assignmentAlertCheck").checked,
+                exam_notifications: document.getElementById("examAlertCheck").checked,
+                theme: "dark"
+            };
+
+            const token = localStorage.getItem("token");
+            try {
+                const response = await fetch("http://localhost:3000/api/user-settings", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ settings })
+                });
+
+                const data = await response.json();
+                alert(data.message);
+            } catch (err) {
+                console.error("Save settings error:", err);
+                alert("Failed to save settings.");
+            }
+        }
+    </script>
+</body>
+
+</html>

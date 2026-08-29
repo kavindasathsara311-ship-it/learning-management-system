@@ -4,53 +4,360 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Daily Attendance</title>
     <link rel="stylesheet" href="Student_Subject.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .attendanceSummaryGrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+        .statCard {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        .statCard h3 {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #bbb;
+            margin-bottom: 10px;
+        }
+        .statCard .value {
+            font-size: 34px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .statCard .value.percentage {
+            color: #00bcd4;
+        }
+        .statCard .value.absent {
+            color: #f44336;
+        }
+        .sectionTitle {
+            color: #fff;
+            font-size: 18px;
+            margin: 25px 0 15px 0;
+            border-bottom: 2px solid rgba(255,255,255,0.2);
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .attendanceTable {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 10px;
+            overflow: hidden;
+            color: #fff;
+            margin-bottom: 30px;
+        }
+        .attendanceTable th, .attendanceTable td {
+            padding: 14px 18px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .attendanceTable th {
+            background: rgba(255, 255, 255, 0.15);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .badge-present { background: #4CAF50; color: #fff; }
+        .badge-absent { background: #f44336; color: #fff; }
+        .badge-late { background: #ff9800; color: #fff; }
+
+        .addReasonBtn {
+            background: #00bcd4;
+            color: #fff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+        .addReasonBtn:hover {
+            background: #008ba3;
+        }
+        .reasonText {
+            font-size: 12px;
+            color: #e0e0e0;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            max-width: 250px;
+        }
+
+        /* Modal styling */
+        .modalOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        .modalBox {
+            background: #1e1e2f;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 450px;
+            padding: 25px;
+            color: #fff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .modalBox h3 {
+            margin-top: 0;
+            color: #00bcd4;
+            font-size: 18px;
+        }
+        .modalBox textarea {
+            width: 100%;
+            height: 100px;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            resize: none;
+            font-family: inherit;
+        }
+        .modalBox textarea:focus {
+            outline: none;
+            border-color: #00bcd4;
+        }
+        .modalActions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .modalBtn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .modalBtn.save { background: #4CAF50; color: #fff; }
+        .modalBtn.cancel { background: #555; color: #fff; }
+    </style>
 </head>
 
 <body id="body">
     <div class="layoutDashboard">
-        <nav class="topNavBar DashboardPart" id="topNavBar">
-            <h1 class="dashboardMainText">School Name</h1>
-                <div class="navBarMiddle">
-                    <a class="navLink middleLinks" id="dashboardNavLink"><i class="fa fa-newspaper-o" style="font-size:16px"></i>Dashboard</a>
-                    <a class="navLink middleLinks" id="subjectNavLink"><i class="fa fa-book" style="font-size:16px"></i>Subjects</a>
-                    <a class="navLink middleLinks" id="examNavLink"><i class="fa fa-calendar" style="font-size:16px"></i>Exams</a>
-                    <a class="navLink middleLinks" id="timeTableNavLink"><i class="fa fa-clock-o" style="font-size:16px"></i>TimeTable</a>
-                    <a class="navLink middleLinks" id="notificationNavLink"><i class="fa fa-book" style="font-size:16px"></i>Notifications</a>
-                </div>
-                <div class="NavBarFooter">
-                    <a class="navLink footerNavLink"><i class="fa fa-cog" style="font-size:16px"></i>Settings</a>
-                    <a class="navLink footerNavLink"><i class="fa fa-user" style="font-size:16px"></i>Profile</a>
-                    <a class="navLink logOutButton footerNavLink"><i class="fa fa-sign-out" style="font-size:16px"></i>Log Out</a>
-                </div>
-        </nav>
-        <div class="subjectContainer DashboardPart" id="dashboardContainer">
-            <div class="subjectCardContainer">
-                <div class="subject_card">Science</div>
-                <div class="subject_card">Mathematics</div>
-                <div class="subject_card">English</div>
-                <div class="subject_card">History</div>
-                <div class="subject_card">Sinhala</div>
-                <div class="subject_card">Tamil</div>
-                <div class="subject_card">Buddisum</div>
-                <div class="subject_card">Christian</div>
-                <div class="subject_card">Civil education</div>
-                <div class="subject_card">Health Education</div>
-                <div class="subject_card">Geography</div>
-                <div class="subject_card">Drama</div>
-                <div class="subject_card">Art</div>
-                <div class="subject_card">Music</div>
-                <div class="subject_card">ICT</div>
-                <div class="subject_card">Practicals</div>
+        <div id="sidebar"></div>
 
+        <div class="subjectContainer DashboardPart" id="dashboardContainer" style="padding: 25px; overflow-y: auto; height: 100vh;">
+            <div style="margin-bottom: 20px;">
+                <h2 class="subjectContainerHeading" style="margin: 0;">Daily Attendance Summary</h2>
+                <p style="color: #00bcd4; margin-top: 5px; font-weight: bold; font-size: 15px;" id="studentInfoHeading">Loading your attendance info...</p>
             </div>
-           
+
+            <!-- Overview Metrics Cards -->
+            <div class="attendanceSummaryGrid">
+                <div class="statCard">
+                    <h3>Attendance Percentage</h3>
+                    <div class="value percentage" id="overallPercentage">--%</div>
+                </div>
+                <div class="statCard">
+                    <h3>Total Days</h3>
+                    <div class="value" id="totalDays" style="color: #fff;">0</div>
+                </div>
+                <div class="statCard">
+                    <h3>Present Days</h3>
+                    <div class="value" id="presentDays" style="color: #4CAF50;">0</div>
+                </div>
+                <div class="statCard">
+                    <h3>Absent Days</h3>
+                    <div class="value" id="absentDays" style="color: #f44336;">0</div>
+                </div>
+            </div>
+
+            <!-- Attendance History Table -->
+            <div class="tableContainer">
+                <h3 style="margin-top: 0; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                    Attendance Records
+                </h3>
+                <table class="attendanceTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Reason / Remarks</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendanceTbody">
+                        <tr><td colspan="4" style="text-align: center; color: #ccc;">Loading records...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
+    </div>
+
+    <!-- Reason Submission Modal -->
+    <div class="modalOverlay" id="reasonModal">
+        <div class="modalBox">
+            <h3 style="margin-top: 0; color: #00bcd4;">Submit Absence Reason</h3>
+            <p id="modalInfo" style="font-size: 13px; color: #ccc; margin-top: 5px;"></p>
+            <textarea id="reasonInput" placeholder="Enter reason for absence (e.g. Medical emergency, Sick leave, Family emergency)..."></textarea>
+            <div class="modalActions">
+                <button class="modalBtn cancel" onclick="closeReasonModal()">Cancel</button>
+                <button class="modalBtn save" onclick="saveAbsenceReason()">Submit Reason</button>
+            </div>
+        </div>
+    </div>
 
     <script src="dashboard.js"></script>
     <script src="student_dashboard.js"></script>
+    <script>
+        let currentSelectedAttendanceId = null;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            renderSidebar("attendance");
+            loadStudentAttendance();
+        });
+
+        async function loadStudentAttendance() {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                window.location.href = "LoginPage.html";
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/student-attendance?_t=${Date.now()}`, {
+                    headers: { 
+                        "Authorization": `Bearer ${token}`,
+                        "Cache-Control": "no-cache"
+                    },
+                    cache: "no-cache"
+                });
+
+                if (!response.ok) throw new Error("Failed to load attendance");
+                const data = await response.json();
+
+                if (!data.success) return;
+
+                if (data.studentInfo) {
+                    document.getElementById("studentInfoHeading").innerHTML = `<i class="fa fa-user-circle"></i> Student: ${data.studentInfo.studentName} (${data.studentInfo.studentRegNo})`;
+                }
+
+                // Update summary metrics
+                document.getElementById("overallPercentage").textContent = `${data.summary.percentage}%`;
+                document.getElementById("totalDays").textContent = data.summary.totalDays;
+                document.getElementById("daysPresent").textContent = data.summary.presentDays;
+                document.getElementById("daysAbsent").textContent = data.summary.absentDays;
+
+                // Render daily attendance records
+                const tbody = document.getElementById("dailyAttendanceTbody");
+                tbody.innerHTML = "";
+
+                if (data.records.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3" style="text-align: center;">No attendance records found.</td></tr>`;
+                } else {
+                    data.records.forEach(rec => {
+                        const isAbsent = rec.status.toLowerCase() === 'absent';
+                        const badgeClass = rec.status.toLowerCase() === 'present' ? 'badge-present' : (isAbsent ? 'badge-absent' : 'badge-late');
+
+                        let actionHtml = `<span style="color: #888;">N/A</span>`;
+                        if (isAbsent) {
+                            if (rec.reason) {
+                                actionHtml = `<span class="reasonText"><i class="fa fa-info-circle"></i> ${rec.reason}</span> <button class="addReasonBtn" style="background:#555;" onclick="openReasonModal(${rec.attendance_id}, '${rec.date}', '${rec.reason.replace(/'/g, "\\'")}')"><i class="fa fa-edit"></i> Edit</button>`;
+                            } else {
+                                actionHtml = `<button class="addReasonBtn" onclick="openReasonModal(${rec.attendance_id}, '${rec.date}', '')"><i class="fa fa-plus-circle"></i> Add Reason</button>`;
+                            }
+                        }
+
+                        const tr = document.createElement("tr");
+                        tr.innerHTML = `
+                            <td><strong>${rec.date}</strong></td>
+                            <td><span class="badge ${badgeClass}">${rec.status}</span></td>
+                            <td>${actionHtml}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+
+            } catch (err) {
+                console.error("Attendance load error:", err);
+            }
+        }
+
+        function openReasonModal(attendanceId, date, existingReason = '') {
+            currentSelectedAttendanceId = attendanceId;
+            document.getElementById("modalInfo").textContent = `Absence Date: ${date}`;
+            document.getElementById("reasonInput").value = existingReason;
+            document.getElementById("reasonModal").style.display = "flex";
+            document.getElementById("reasonInput").focus();
+        }
+
+        function closeReasonModal() {
+            document.getElementById("reasonModal").style.display = "none";
+            currentSelectedAttendanceId = null;
+        }
+
+        async function saveAbsenceReason() {
+            const reason = document.getElementById("reasonInput").value.trim();
+            if (!reason) {
+                alert("Please enter a valid reason for your absence.");
+                return;
+            }
+
+            const token = localStorage.getItem("token");
+            if (!token) return;
+
+            try {
+                const response = await fetch("http://localhost:3000/api/submit-absence-reason", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ attendanceId: currentSelectedAttendanceId, reason })
+                });
+
+                const data = await response.json();
+                alert(data.message);
+                if (data.success) {
+                    closeReasonModal();
+                    loadStudentAttendance();
+                }
+            } catch (err) {
+                console.error("Error submitting reason:", err);
+                alert("Could not submit absence reason.");
+            }
+        }
+    </script>
 </body>
 
 </html>

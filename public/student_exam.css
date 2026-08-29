@@ -6,60 +6,114 @@ body {
   background-color: rgba(23, 36, 178, 0.85);
 }
 .layoutDashboard{
+    display: flex;
     flex-direction: row;
     width: 100vw;
-    height: 100vh;
+    min-height: 100vh;
 }
-.topNavBar{
-    width: 15%;
+#sidebar, .topNavBar{
+    width: 230px;
+    min-width: 230px;
+    max-width: 230px;
     height: 100vh;
     position: fixed;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    left: 0;
+    top: 0;
+    bottom: 0;
+    box-shadow: none !important;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
+    padding: 15px 0 20px 0;
+    overflow: hidden;
+    background-color: transparent !important;
+    border: none !important;
+    z-index: 1000;
+}
+.dashboardMainText {
+    font-size: 22px;
+    font-weight: 800;
+    text-align: center;
+    margin: 10px 0 15px 0;
+    color: #ffffff;
+    letter-spacing: 0.5px;
 }
 .navBarMiddle{
-    width: 80%;
-    margin: 10vh auto;
-    border-top: 1px solid rgb(180, 180, 180);
-    border-bottom: 1px solid rgb(180, 180, 180);
+    width: 90%;
+    margin: 0 auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.navBarMiddle::-webkit-scrollbar {
+    width: 4px;
+}
+.navBarMiddle::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
 }
 .NavBarFooter{
-    border-top: 1px solid rgb(66, 66, 66);
-    border-bottom: 1px solid rgb(59, 59, 59);
-    width: 80%;
-    margin: 13vh auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    width: 90%;
+    margin: 10px auto 0 auto;
+    padding-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 .navLink{
-    display: block;
-    color: rgb(246, 242, 242);
+    display: flex;
+    align-items: center;
+    color: rgba(255, 255, 255, 0.92);
     text-decoration: none;
-    font-size: 1.2vw;
-    font-weight:750;
-    width: 80%;
-    border-radius: 20px;
-    height: 5%;
-    margin: 3vh auto;
-    line-height: 5vh;
+    font-size: 15px;
+    font-weight: 600;
+    width: 100%;
+    border-radius: 12px;
+    padding: 10px 16px;
+    margin: 0;
+    box-sizing: border-box;
+    transition: all 0.2s ease-in-out;
+}
+.navLink i, .navLink .fa, .navLink .fas {
+    font-size: 18px;
+    margin-right: 14px;
+    width: 22px;
+    text-align: center;
+    display: inline-block;
+}
+.navLink span {
+    font-size: 15px;
+    letter-spacing: 0.2px;
 }
 .middleLinks{
-    margin-top: 1vh;
+    margin-top: 0;
 }
 .navLink:hover{
-    width: 100%;
-    color:rgba(23, 36, 178, 0.85);
-    background-color: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    transition: 0.3s;
+    color: rgba(23, 36, 178, 1);
+    background-color: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
     cursor: pointer;
 }
-.topNavBar .fa{
-    margin:0 10px 0 10px;
+.navLink.active {
+    background-color: #ffffff !important;
+    color: #1724b2 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
 }
 .examContainer{
-    position: absolute;
-    width: 83%;
-    margin: 10vh 15%;
-     background-color: rgba(255, 255, 255, 0.7);
+    width: calc(100% - 280px);
+    margin: 3vh 30px 3vh 260px;
+    background-color: rgba(255, 255, 255, 0.7);
     border-radius: 20px;
+    box-sizing: border-box;
 }
 .examCardContainer{
     display: grid;
