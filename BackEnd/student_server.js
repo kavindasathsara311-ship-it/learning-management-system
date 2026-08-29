@@ -2556,6 +2556,813 @@ app.post("/api/publish-results", verifyToken, async (req, res) => {
   }
 });
 
+// ==========================================
+// ADMIN PORTAL API ENDPOINTS (FULL STACK)
+// ==========================================
+
+// Helper middleware / check for admin role
+function requireAdmin(req, res) {
+  if (req.user.role !== "admin") {
+    res.status(403).json({ success: false, message: "Access denied. Admin role required." });
+    return false;
+  }
+  return true;
+}
+
+// 1. Dashboard Summary KPI metrics
+app.get("/api/admin/dashboard-summary", verifyToken, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+
+  try {
+    const [studentsCount, teachersCount, subjectsCount, examsCount, recentAnnounce, recentStudents] = await Promise.all([
+      pool.query("SELECT COUNT(*) AS total FROM student WHERE is_active IS NOT FALSE"),
+      pool.query("SELECT COUNT(*) AS total FROM teacher WHERE is_active IS NOT FALSE"),
+      pool.query("SELECT COUNT(*) AS total FROM subject"),
+      pool.query("SELECT COUNT(*) AS total FROM subject_exam WHERE date >= CURRENT_DATE"),
+      pool.query(`
+        SELECT a.announcement_id, a.title, a.message, a.created_at,
+               COALESCE(t.teacher_name, 'Administration') AS author
+        FROM announcement a
+        LEFT JOIN teacher t ON a.created_by = t.teacher_id
+        ORDER BY a.created_at DESC LIMIT 5
+      `),
+      pool.query(`
+        SELECT s.student_id, s.student_reg_no, s.student_name, g.grade_name, s.created_at
+        FROM student s
+        LEFT JOIN grade g ON s.grade_id = g.grade_id
+        ORDER BY s.student_id DESC LIMIT 5
+      `)
+    ]);
+
+    res.json({
+      success: true,
+      summary: {
+        total_students: parseInt(studentsCount.rows[0].total, 10),
+        total_teachers: parseInt(teachersCount.rows[0].total, 10),
+        total_subjects: parseInt(subjectsCount.rows[0].total, 10),
+        upcoming_exams: parseInt(examsCount.rows[0].total, 10),
+        recent_announcements: recentAnnounce.rows,
+        recent_students: recentStudents.rows
+      }
+    });
+  } catch (err) {
+    console.error("Error loading admin dashboard summary:", err);
+    res.status(500).json({ success: false, message: "Failed to load dashboard summary" });
+  }
+});
+
+// 2. User Management - Students
+app.get("/api/admin/students", verifyToken, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+
+  const { grade_id, search, is_active, page = 1, limit = 50 } = req.query;
+  const offset = (parseInt(page, 10) - 1) * parseInt(limit, 10);
+
+  try {
+    let whereClauses = [];
+    let params = [];
+
+    if (grade_id && grade_id !== "all") {
+      params.push(grade_id);
+      whereClauses.push(`s.grade_id = $${params.length}`);
+    }
+
+    if (search && search.trim() !== "") {
+      params.push(`%${search.trim()}%`);
+      whereClauses.push(`(s.student_name ILIKE $${params.length} OR s.student_reg_no ILIKE $${params.length} OR s.email ILIKE $${params.length})`);
+    }
+
+    if (is_active !== undefined && is_active !== "all") {
+      params.push(is_active === "true" || is_active === true);
+      whereClauses.push(`COALESCE(s.is_active, true) = $${params.length}`);
+    }
+
+    const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+
+    const countRes = await pool.query(`SELECT COUNT(*) as total FROM student s ${whereSql}`, params);
+    const totalCount = parseInt(countRes.rows[0].total, 10);
+
+    params.push(parseInt(limit, 10));
+    params.push(offset);
+
+    const query = `
+      SELECT 
+        s.student_id,
+        s.student_reg_no,
+        s.student_name,
+        s.email,
+        s.phone_number,
+        s.address,
+        s.grade_id,
+        g.grade_name,
+        COALESCE(s.is_active, true) AS is_active,
+        s.created_at,
+        (SELECT COUNT(*) FROM enrolled_subjects es WHERE es.student_id = s.student_id) AS enrolled_subjects_count
+      FROM student s
+      LEFT JOIN grade g ON s.grade_id = g.grade_id
+      ${whereSql}
+      ORDER BY s.student_id DESC
+      LIMIT $${params.length - 1} OFFSET $${params.length}
+    `;
+
+    const result = await pool.query(query, params);
+
+    res.json({
+      success: true,
+      students: result.rows,
+      total: totalCount,
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10)
+    });
+  } catch (err) {
+    console.error("Error fetching students for admin:", err);
+    res.status(500).json({ success: false, message: "Failed to fetch students" });
+  }
+});
+
+// Create student
+app.post("/api/admin/students", verifyToken, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+
+  const { student_name, student_reg_no, email, phone_number, address, password, grade_id } = req.body;
+  if (!student_name || !student_reg_no || !email || !password || !grade_id) {
+    return res.status(400).json({ success: false, message: "Name, Reg No, Email, Password, and Grade are required" });
+  }
+
+  try {
+    const existing = await pool.query("SELECT * FROM student WHERE email = $1 OR student_reg_no = $2", [email, student_reg_no]);
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ success: false, message: "Email or Student Register Number already registered" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const insertRes = await pool.query(
+      `INSERT INTO student (student_name, student_reg_no, email, phone_number, address, password, grade_id, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, true)
+       RETURNING student_id, student_reg_no, student_name, email, grade_id`,
+      [student_name, student_reg_no, email, phone_number || null, address || null, hashedPassword, grade_id]
+    );
+    const newStudent = insertRes.rows[0];
+
+    // Automatically enroll in grade's subjects
+    const gradeSubjects = await pool.query("SELECT subject_id FROM subject WHERE grade_id = $1", [grade_id]);
+    for (const sub of gradeSubjects.rows) {
+      await pool.query(
+        "INSERT INTO enrolled_subjects (student_id, subject_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+        [newStudent.student_id, sub.subject_id]
+      );
+    }
+
+    res.json({ success: true, message: "Student created successfully", student: newStudent });
+  } catch (err) {
+    console.error("Error creating student:", err);
+    res.status(500).json({ success: false, message: "Failed to create student: " + err.message });
+  }
+});
+
+// Update student
+app.put("/api/admin/students/:id", verifyToken, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+
+  const studentId = req.params.id;
+  const { student_name, email, phone_number, address, grade_id, is_active, password } = req.body;
+
+  try {
+    let query = `
+      UPDATE student 
+      SET student_name = COALESCE($1, student_name),
+          email = COALESCE($2, email),
+          phone_number = COALESCE($3, phone_number),
+          address = COALESCE($4, address),
+          grade_id = COALESCE($5, grade_id),
+          is_active = COALESCE($6, is_active)
+    `;
+    let params = [
+      student_name || null,
+      email || null,
+      phone_number || null,
+      address || null,
+      grade_id || null,
+      is_active !== undefined ? is_active : null
+    ];
+
+    if (password && password.trim().length >= 6) {
+      const hashedPassword = await bcrypt.hash(password.trim(), 10);
+      params.push(hashedPassword);
+      query += `, password = $${params.length}`;
+    }
+
+    params.push(studentId);
+    query += ` WHERE student_id::text = $${params.length} OR student_reg_no = $${params.length} RETURNING *`;
+
+    const result = await pool.query(query, params);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
+
+    res.json({ success: true, message: "Student updated successfully", student: result.rows[0] });
+  } catch (err) {
+    console.error("Error updating student:", err);
+    res.status(500).json({ success: false, message: "Failed to update student: " + err.message });
+  }
+});
+
+// Toggle deactivate / activate student
+app.delete("/api/admin/students/:id", verifyToken, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+
+  const studentId = req.params.id;
+  try {
+    const check = await pool.query("SELECT is_active FROM student WHERE student_id::text = $1 OR student_reg_no = $1", [studentId]);
+    if (check.rows.length === 0) return res.status(404).json({ success: false, message: "Student not found" });
+
+    const newStatus = !(check.rows[0].is_active !== false);
+    await pool.query("UPDATE student SET is_active = $1 WHERE student_id::text = $2 OR student_reg_no = $2", [newStatus, studentId]);
+
+    res.json({ success: true, message: `Student status updated to ${newStatus ? 'Active' : 'Deactivated'}`, is_active: newStatus });
+  } catch (err) {
+    console.error("Error deactivating student:", err);
+    res.status(500).json({ success: false, message: "Failed to toggle status" });
+  }
+});
+
+// 3. User Management - Teachers
+app.get("/api/admin/teachers", verifyToken, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+
+  const { search, is_active, page = 1, limit = 50 } = req.query;
+  const offset = (parseInt(page, 10) - 1) * parseInt(limit, 10);
+
+  try {
+    let whereClauses = [];
+    let params = [];
+
+    if (search && search.trim() !== "") {
+      params.push(`%${search.trim()}%`);
+      whereClauses.push(`(t.teacher_name ILIKE $${params.length} OR t.teacher_reg_no ILIKE $${params.length} OR t.email ILIKE $${params.length})`);
+    }
+
+    if (is_active !== undefined && is_active !== "all") {
+      params.push(is_active === "true" || is_active === true);
+      whereClauses.push(`COALESCE(t.is_active, true) = $${params.length}`);
+    }
+
+    const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+
+    const countRes = await pool.query(`SELECT COUNT(*) as total FROM teacher t ${whereSql}`, params);
+    const totalCount = parseInt(countRes.rows[0].total, 10);
+
+    params.push(parseInt(limit, 10));
+    params.push(offset);
+
+    const query = `
+      SELECT 
+        t.teacher_id,
+        t.teacher_reg_no,
+        t.teacher_name,
+        t.email,
+        t.phone_number,
+        t.address,
+        t.incharge_grade_id,
+        g.grade_name AS incharge_grade_name,
+        COALESCE(t.is_active, true) AS is_active,
+        COALESCE(json_agg(DISTINCT jsonb_build_object('subject_id', s.subject_id, 'subject_name', s.subject_name, 'grade_name', sg.grade_name, 'grade_id', s.grade_id)) FILTER (WHERE s.subject_id IS NOT NULL), '[]') AS assigned_subjects
+      FROM teacher t
+      LEFT JOIN grade g ON t.incharge_grade_id = g.grade_id
+      LEFT JOIN teacher_subjects ts ON t.teacher_id = ts.teacher_id
+      LEFT JOIN subject s ON ts.subject_id = s.subject_id
+      LEFT JOIN grade sg ON s.grade_id = sg.grade_id
+      ${whereSql}
+      GROUP BY t.teacher_id, g.grade_name
+      ORDER BY t.teacher_id DESC
+      LIMIT $${params.length - 1} OFFSET $${params.length}
+    `;
+
+    const result = await pool.query(query, params);
+
+    res.json({
+      success: true,
+      teachers: result.rows,
+      total: totalCount,
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10)
+    });
+  } catch (err) {
+    console.error("Error fetching teachers for admin:", err);
+    res.status(500).json({ success: false, message: "Failed to fetch teachers" });
+  }
+});
+
+// Create teacher
+app.post("/api/admin/teachers", verifyToken, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+
+  const { teacher_name, teacher_reg_no, email, phone_number, address, password, incharge_grade_id, teachingSubjects } = req.body;
+  if (!teacher_name || !teacher_reg_no || !email || !password) {
+    return res.status(400).json({ success: false, message: "Name, Reg No, Email, and Password are required" });
+  }
+
+  try {
+    const existing = await pool.query("SELECT * FROM teacher WHERE email = $1 OR teacher_reg_no = $2", [email, teacher_reg_no]);
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ success: false, message: "Email or Teacher Register Number already registered" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const insertRes = await pool.query(
+      `INSERT INTO teacher (teacher_name, teacher_reg_no, email, phone_number, address, password, incharge_grade_id, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, true)
+       RETURNING teacher_id, teacher_reg_no, teacher_name, email`,
+      [teacher_name, teacher_reg_no, email, phone_number || null, address || null, hashedPassword, incharge_grade_id || null]
+    );
+    const newTeacher = insertRes.rows[0];
+
+    if (Array.isArray(teachingSubjects)) {
+      for (const subId of teachingSubjects) {
+        await pool.query(
+          "INSERT INTO teacher_subjects (teacher_id, subject_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+          [newTeacher.teacher_id, subId]
+        );
+      }
+    }
+
+    res.json({ success: true, message: "Teacher created successfully", teacher: newTeacher });
+  } catch (err) {
+    console.error("Error creating teacher:", err);
+    res.status(500).json({ success: false, message: "Failed to create teacher: " + err.message });
+  }
+});
+
+// Update teacher
+app.put("/api/admin/teachers/:id", verifyToken, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+
+  const teacherId = req.params.id;
+  const { teacher_name, email, phone_number, address, incharge_grade_id, is_active, password, teachingSubjects } = req.body;
+
+  try {
+    let query = `
+      UPDATE teacher 
+      SET teacher_name = COALESCE($1, teacher_name),
+          email = COALESCE($2, email),
+          phone_number = COALESCE($3, phone_number),
+          address = COALESCE($4, address),
+          incharge_grade_id = $5,
+          is_active = COALESCE($6, is_active)
+    `;
+    let params = [
+      teacher_name || null,
+      email || null,
+      phone_number || null,
+      address || null,
+      incharge_grade_id !== undefined ? incharge_grade_id : null,
+      is_active !== undefined ? is_active : null
+    ];
+
+    if (password && password.trim().length >= 6) {
+      const hashedPassword = await bcrypt.hash(password.trim(), 10);
+      params.push(hashedPassword);
+      query += `, password = $${params.length}`;
+    }
+
+    params.push(teacherId);
+    query += ` WHERE teacher_id::text = $${params.length} OR teacher_reg_no = $${params.length} RETURNING *`;
+
+    const result = await pool.query(query, params);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Teacher not found" });
+    }
+
+    const updatedTeacher = result.rows[0];
+
+    // If teachingSubjects array provided, sync
+    if (Array.isArray(teachingSubjects)) {
+      await pool.query("DELETE FROM teacher_subjects WHERE teacher_id = $1", [updatedTeacher.teacher_id]);
+      for (const subId of teachingSubjects) {
+        await pool.query(
+          "INSERT INTO teacher_subjects (teacher_id, subject_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+          [updatedTeacher.teacher_id, subId]
+        );
+      }
+    }
+
+    res.json({ success: true, message: "Teacher updated successfully", teacher: updatedTeacher });
+  } catch (err) {
+    console.error("Error updating teacher:", err);
+    res.status(500).json({ success: false, message: "Failed to update teacher: " + err.message });
+  }
+});
+
+// Toggle deactivate / activate teacher
+app.delete("/api/admin/teachers/:id", verifyToken, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+
+  const teacherId = req.params.id;
+  try {
+    const check = await pool.query("SELECT is_active FROM teacher WHERE teacher_id::text = $1 OR teacher_reg_no = $1", [teacherId]);
+    if (check.rows.length === 0) return res.status(404).json({ success: false, message: "Teacher not found" });
+
+    const newStatus = !(check.rows[0].is_active !== false);
+    await pool.query("UPDATE teacher SET is_active = $1 WHERE teacher_id::text = $2 OR teacher_reg_no = $2", [newStatus, teacherId]);
+
+    res.json({ success: true, message: `Teacher status updated to ${newStatus ? 'Active' : 'Deactivated'}`, is_active: newStatus });
+  } catch (err) {
+    console.error("Error deactivating teacher:", err);
+    res.status(500).json({ success: false, message: "Failed to toggle status" });
+  }
+});
+
+// 4. Course & Class Management - Subjects & Classes
+app.get("/api/admin/subjects", verifyToken, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+
+  const { grade_id, search } = req.query;
+  try {
+    let whereClauses = [];
+    let params = [];
+
+    if (grade_id && grade_id !== "all") {
+      params.push(grade_id);
+      whereClauses.push(`s.grade_id = $${params.length}`);
+    }
+
+    if (search && search.trim() !== "") {
+      params.push(`%${search.trim()}%`);
+      whereClauses.push(`(s.subject_name ILIKE $${params.length} OR s.subject_id ILIKE $${params.length})`);
+    }
+
+    const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+
+    const query = `
+      SELECT 
+        s.subject_id,
+        s.subject_name,
+        s.grade_id,
+        g.grade_name,
+        COALESCE(json_agg(DISTINCT jsonb_build_object('teacher_id', t.teacher_id, 'teacher_name', t.teacher_name, 'teacher_reg_no', t.teacher_reg_no, 'email', t.email)) FILTER (WHERE t.teacher_id IS NOT NULL), '[]') AS teachers,
+        (SELECT COUNT(*) FROM enrolled_subjects es WHERE es.subject_id = s.subject_id) AS enrolled_count,
+        (SELECT COUNT(*) FROM course_materials cm WHERE cm.subject_id = s.subject_id) AS materials_count,
+        (SELECT COUNT(*) FROM assignment a WHERE a.subject_id = s.subject_id) AS assignments_count
+      FROM subject s
+      LEFT JOIN grade g ON s.grade_id = g.grade_id
+      LEFT JOIN teacher_subjects ts ON s.subject_id = ts.subject_id
+      LEFT JOIN teacher t ON ts.teacher_id = t.teacher_id
+      ${whereSql}
+      GROUP BY s.subject_id, g.grade_name, g.grade_id
+      ORDER BY g.grade_id ASC, s.subject_name ASC
+    `;
+
+    const result = await pool.query(query, params);
+    res.json({ success: true, subjects: result.rows });
+  } catch (err) {
+    console.error("Error fetching subjects for admin:", err);
+    res.status(500).json({ success: false, message: "Failed to load subjects" });
+  }
+});
+
+// Create Subject
+app.post("/api/admin/subjects", verifyToken, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+
+  const { subject_id, subject_name, grade_id, teacher_id } = req.body;
+  if (!subject_id || !subject_name || !grade_id) {
+    return res.status(400).json({ success: false, message: "Subject ID, Subject Name, and Grade ID are required" });
+  }
+
+  try {
+    const existing = await pool.query("SELECT * FROM subject WHERE subject_id = $1", [subject_id.trim()]);
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ success: false, message: `Subject ID '${subject_id}' already exists` });
+    }
+
+    const insertSub = await pool.query(
+      "INSERT INTO subject (subject_id, subject_name, grade_id) VALUES ($1, $2, $3) RETURNING *",
+      [subject_id.trim(), subject_name.trim(), grade_id]
+    );
+
+    if (teacher_id) {
+      await pool.query(
+        "INSERT INTO teacher_subjects (teacher_id, subject_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+        [teacher_id, subject_id.trim()]
+      );
+    }
+
+    // Auto-enroll active students of that grade
+    await pool.query(
+      `INSERT INTO enrolled_subjects (student_id, subject_id)
+       SELECT student_id, $1 FROM student WHERE grade_id = $2
+       ON CONFLICT DO NOTHING`,
+      [subject_id.trim(), grade_id]
+    );
+
+    res.json({ success: true, message: "Subject created successfully", subject: insertSub.rows[0] });
+  } catch (err) {
+    console.error("Error creating subject:", err);
+    res.status(500).json({ success: false, message: "Failed to create subject: " + err.message });
+  }
+});
+
+// Assign Teacher to Subject
+app.post("/api/admin/assign-teacher", verifyToken, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+
+  const { teacher_id, subject_id } = req.body;
+  if (!teacher_id || !subject_id) {
+    return res.status(400).json({ success: false, message: "teacher_id and subject_id are required" });
+  }
+
+  try {
+    await pool.query(
+      "INSERT INTO teacher_subjects (teacher_id, subject_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+      [teacher_id, subject_id]
+    );
+    res.json({ success: true, message: "Teacher assigned to subject successfully" });
+  } catch (err) {
+    console.error("Error assigning teacher:", err);
+    res.status(500).json({ success: false, message: "Failed to assign teacher" });
+  }
+});
+
+// Unassign Teacher from Subject
+app.post("/api/admin/unassign-teacher", verifyToken, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+
+  const { teacher_id, subject_id } = req.body;
+  if (!teacher_id || !subject_id) {
+    return res.status(400).json({ success: false, message: "teacher_id and subject_id are required" });
+  }
+
+  try {
+    await pool.query(
+      "DELETE FROM teacher_subjects WHERE teacher_id = $1 AND subject_id = $2",
+      [teacher_id, subject_id]
+    );
+    res.json({ success: true, message: "Teacher unassigned from subject" });
+  } catch (err) {
+    console.error("Error unassigning teacher:", err);
+    res.status(500).json({ success: false, message: "Failed to unassign teacher" });
+  }
+});
+
+// Sections / Grades Management
+app.get("/api/admin/sections", verifyToken, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+
+  try {
+    const result = await pool.query(`
+      SELECT 
+        g.grade_id,
+        g.grade_name,
+        (SELECT COUNT(*) FROM student s WHERE s.grade_id = g.grade_id AND s.is_active IS NOT FALSE) AS student_count,
+        (SELECT COUNT(*) FROM subject sub WHERE sub.grade_id = g.grade_id) AS subject_count,
+        (SELECT teacher_name FROM teacher t WHERE t.incharge_grade_id = g.grade_id LIMIT 1) AS incharge_teacher
+      FROM grade g
+      ORDER BY g.grade_id ASC
+    `);
+    res.json({ success: true, sections: result.rows });
+  } catch (err) {
+    console.error("Error fetching sections:", err);
+    res.status(500).json({ success: false, message: "Failed to load sections" });
+  }
+});
+
+app.post("/api/admin/sections", verifyToken, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+
+  const { grade_id, grade_name } = req.body;
+  if (!grade_id || !grade_name) {
+    return res.status(400).json({ success: false, message: "Grade ID and Grade Name are required" });
+  }
+
+  try {
+    const result = await pool.query(
+      "INSERT INTO grade (grade_id, grade_name) VALUES ($1, $2) ON CONFLICT (grade_id) DO UPDATE SET grade_name = EXCLUDED.grade_name RETURNING *",
+      [grade_id.trim(), grade_name.trim()]
+    );
+    res.json({ success: true, message: "Class / Grade section created successfully", section: result.rows[0] });
+  } catch (err) {
+    console.error("Error saving section:", err);
+    res.status(500).json({ success: false, message: "Failed to save section: " + err.message });
+  }
+});
+
+// 5. Reports & Analytics Endpoints
+app.get("/api/admin/reports/enrollment", verifyToken, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+
+  try {
+    const gradeEnrollment = await pool.query(`
+      SELECT g.grade_id, g.grade_name, COUNT(s.student_id) AS student_count
+      FROM grade g
+      LEFT JOIN student s ON g.grade_id = s.grade_id AND s.is_active IS NOT FALSE
+      GROUP BY g.grade_id, g.grade_name
+      ORDER BY g.grade_id ASC
+    `);
+
+    const subjectEnrollment = await pool.query(`
+      SELECT s.subject_id, s.subject_name, g.grade_name, COUNT(es.student_id) AS student_count
+      FROM subject s
+      LEFT JOIN grade g ON s.grade_id = g.grade_id
+      LEFT JOIN enrolled_subjects es ON s.subject_id = es.subject_id
+      GROUP BY s.subject_id, s.subject_name, g.grade_name
+      ORDER BY student_count DESC LIMIT 20
+    `);
+
+    res.json({
+      success: true,
+      by_grade: gradeEnrollment.rows,
+      by_subject: subjectEnrollment.rows
+    });
+  } catch (err) {
+    console.error("Error loading enrollment report:", err);
+    res.status(500).json({ success: false, message: "Failed to load enrollment report" });
+  }
+});
+
+app.get("/api/admin/reports/attendance", verifyToken, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+
+  const { from_date, to_date } = req.query;
+
+  try {
+    let dateFilter = "";
+    let params = [];
+    if (from_date && to_date) {
+      params.push(from_date, to_date);
+      dateFilter = "WHERE a.date >= $1 AND a.date <= $2";
+    }
+
+    const stats = await pool.query(`
+      SELECT 
+        COUNT(*) AS total_records,
+        COUNT(*) FILTER (WHERE a.status = 'Present') AS present_count,
+        COUNT(*) FILTER (WHERE a.status = 'Absent') AS absent_count,
+        COUNT(*) FILTER (WHERE a.status = 'Late') AS late_count,
+        ROUND((COUNT(*) FILTER (WHERE a.status = 'Present')::decimal / NULLIF(COUNT(*), 0) * 100), 1) AS overall_rate
+      FROM attendance a
+      ${dateFilter}
+    `, params);
+
+    const gradeBreakdown = await pool.query(`
+      SELECT 
+        g.grade_id,
+        g.grade_name,
+        COUNT(a.attendance_id) AS total_records,
+        COUNT(a.attendance_id) FILTER (WHERE a.status = 'Present') AS present_count,
+        ROUND((COUNT(a.attendance_id) FILTER (WHERE a.status = 'Present')::decimal / NULLIF(COUNT(a.attendance_id), 0) * 100), 1) AS attendance_rate
+      FROM grade g
+      LEFT JOIN student s ON g.grade_id = s.grade_id
+      LEFT JOIN attendance a ON s.student_id = a.student_id
+      GROUP BY g.grade_id, g.grade_name
+      ORDER BY g.grade_id ASC
+    `);
+
+    const dailyTrends = await pool.query(`
+      SELECT 
+        a.date,
+        COUNT(a.attendance_id) AS total,
+        COUNT(a.attendance_id) FILTER (WHERE a.status = 'Present') AS present,
+        COUNT(a.attendance_id) FILTER (WHERE a.status = 'Absent') AS absent,
+        COUNT(a.attendance_id) FILTER (WHERE a.status = 'Late') AS late,
+        ROUND((COUNT(a.attendance_id) FILTER (WHERE a.status = 'Present')::decimal / NULLIF(COUNT(a.attendance_id), 0) * 100), 1) AS rate
+      FROM attendance a
+      GROUP BY a.date
+      ORDER BY a.date ASC
+      LIMIT 30
+    `);
+
+    res.json({
+      success: true,
+      overall: stats.rows[0] || {},
+      by_grade: gradeBreakdown.rows,
+      daily_trends: dailyTrends.rows
+    });
+  } catch (err) {
+    console.error("Error loading attendance report:", err);
+    res.status(500).json({ success: false, message: "Failed to load attendance report" });
+  }
+});
+
+app.get("/api/admin/reports/results", verifyToken, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+
+  try {
+    const summary = await pool.query(`
+      SELECT 
+        COUNT(*) AS total_results,
+        ROUND(AVG(r.marks_obtained), 1) AS average_score,
+        COUNT(*) FILTER (WHERE r.marks_obtained >= 40) AS pass_count,
+        COUNT(*) FILTER (WHERE r.marks_obtained < 40) AS fail_count,
+        ROUND((COUNT(*) FILTER (WHERE r.marks_obtained >= 40)::decimal / NULLIF(COUNT(*), 0) * 100), 1) AS pass_rate
+      FROM result r
+    `);
+
+    const bySubject = await pool.query(`
+      SELECT 
+        s.subject_id,
+        s.subject_name,
+        g.grade_name,
+        COUNT(r.result_id) AS candidates,
+        ROUND(AVG(r.marks_obtained), 1) AS avg_mark,
+        MAX(r.marks_obtained) AS highest_mark,
+        MIN(r.marks_obtained) AS lowest_mark,
+        ROUND((COUNT(*) FILTER (WHERE r.marks_obtained >= 40)::decimal / NULLIF(COUNT(r.result_id), 0) * 100), 1) AS pass_rate
+      FROM subject s
+      LEFT JOIN grade g ON s.grade_id = g.grade_id
+      LEFT JOIN result r ON s.subject_id = r.subject_id
+      GROUP BY s.subject_id, s.subject_name, g.grade_name
+      HAVING COUNT(r.result_id) > 0
+      ORDER BY avg_mark DESC
+    `);
+
+    res.json({
+      success: true,
+      summary: summary.rows[0] || {},
+      by_subject: bySubject.rows
+    });
+  } catch (err) {
+    console.error("Error loading results report:", err);
+    res.status(500).json({ success: false, message: "Failed to load results report" });
+  }
+});
+
+app.get("/api/admin/reports/course-completion", verifyToken, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+
+  try {
+    const stats = await pool.query(`
+      SELECT 
+        (SELECT COUNT(*) FROM course_materials) AS total_materials,
+        (SELECT COUNT(*) FROM assignment) AS total_assignments,
+        (SELECT COUNT(*) FROM submission) AS total_submissions,
+        (SELECT COUNT(*) FROM submission WHERE marks IS NOT NULL) AS graded_submissions
+    `);
+
+    const subjectBreakdown = await pool.query(`
+      SELECT 
+        s.subject_id,
+        s.subject_name,
+        g.grade_name,
+        (SELECT COUNT(*) FROM course_materials cm WHERE cm.subject_id = s.subject_id) AS materials_count,
+        (SELECT COUNT(*) FROM assignment a WHERE a.subject_id = s.subject_id) AS assignments_count,
+        (SELECT COUNT(*) FROM submission sub JOIN assignment a ON sub.assignment_id = a.assignment_id WHERE a.subject_id = s.subject_id) AS submissions_count
+      FROM subject s
+      LEFT JOIN grade g ON s.grade_id = g.grade_id
+      ORDER BY materials_count DESC, assignments_count DESC
+    `);
+
+    res.json({
+      success: true,
+      stats: stats.rows[0] || {},
+      by_subject: subjectBreakdown.rows
+    });
+  } catch (err) {
+    console.error("Error loading course completion report:", err);
+    res.status(500).json({ success: false, message: "Failed to load course completion report" });
+  }
+});
+
+// 6. System Settings Endpoints
+app.get("/api/admin/settings", verifyToken, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+
+  try {
+    const result = await pool.query("SELECT key, value, updated_at FROM system_settings ORDER BY key ASC");
+    const settingsObj = {};
+    result.rows.forEach(r => {
+      settingsObj[r.key] = r.value;
+    });
+    res.json({ success: true, settings: settingsObj });
+  } catch (err) {
+    console.error("Error fetching system settings:", err);
+    res.status(500).json({ success: false, message: "Failed to load system settings" });
+  }
+});
+
+app.put("/api/admin/settings", verifyToken, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+
+  const { settings } = req.body;
+  if (!settings || typeof settings !== 'object') {
+    return res.status(400).json({ success: false, message: "Settings object is required" });
+  }
+
+  try {
+    for (const [key, value] of Object.entries(settings)) {
+      await pool.query(
+        `INSERT INTO system_settings (key, value, updated_at)
+         VALUES ($1, $2, NOW())
+         ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()`,
+        [key, String(value)]
+      );
+    }
+    res.json({ success: true, message: "System settings saved successfully" });
+  } catch (err) {
+    console.error("Error saving system settings:", err);
+    res.status(500).json({ success: false, message: "Failed to save system settings: " + err.message });
+  }
+});
+
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

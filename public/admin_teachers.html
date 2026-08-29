@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Teachers - Admin Portal</title>
+    <link rel="stylesheet" href="Teacher_Dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .filterBar {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 25px;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 18px 22px;
+            border-radius: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filterGroup {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filterGroup label {
+            font-size: 11px;
+            font-weight: bold;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filterGroup input,
+        .filterGroup select {
+            padding: 9px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: #1e293b;
+            color: #ffffff;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .actionBtn {
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: none;
+            background: #00bcd4;
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            margin-top: auto;
+        }
+
+        .actionBtn:hover {
+            background: #00acc1;
+            transform: translateY(-2px);
+        }
+
+        .actionBtn.success {
+            background: #22c55e;
+        }
+        .actionBtn.success:hover {
+            background: #16a34a;
+        }
+
+        .tableContainer {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            overflow: hidden;
+            color: #ffffff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+        }
+
+        .tableContainer th,
+        .tableContainer td {
+            padding: 14px 18px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .tableContainer th {
+            background: rgba(255, 255, 255, 0.12);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #cbd5e1;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .badge-active { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid #22c55e; }
+        .badge-inactive { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+
+        .subBadge {
+            background: rgba(192, 132, 252, 0.15);
+            color: #c084fc;
+            border: 1px solid rgba(192, 132, 252, 0.3);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin: 2px;
+            display: inline-block;
+        }
+
+        .rowBtn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-right: 6px;
+            transition: 0.2s;
+        }
+
+        .rowBtn.edit { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid #38bdf8; }
+        .rowBtn.edit:hover { background: #38bdf8; color: #000; }
+        .rowBtn.assign { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid #a855f7; }
+        .rowBtn.assign:hover { background: #a855f7; color: #fff; }
+        .rowBtn.toggle { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+        .rowBtn.toggle:hover { background: #ef4444; color: #fff; }
+        .rowBtn.activate { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid #22c55e; }
+        .rowBtn.activate:hover { background: #22c55e; color: #000; }
+
+        /* Modal styling */
+        .modalBackdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .modalBox {
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 30px;
+            width: 90%;
+            max-width: 580px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            color: #ffffff;
+        }
+
+        .modalHeader {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+
+        .modalHeader h3 {
+            margin: 0;
+            font-size: 18px;
+            color: #ffffff;
+        }
+
+        .modalClose {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .modalGrid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .modalInputGroup {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .modalInputGroup label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #cbd5e1;
+        }
+
+        .modalInputGroup input,
+        .modalInputGroup select {
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: #0f172a;
+            color: #ffffff;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body id="body">
+    <div class="layoutDashboard">
+        <div id="sidebar"></div>
+
+        <div class="dashboardContainer DashboardPart" id="dashboardContainer" style="padding: 30px; overflow-y: auto; height: 94vh;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                <div>
+                    <h2 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800;">
+                        <i class="fa fa-chalkboard-teacher" style="color: #00bcd4;"></i> Teacher & Faculty Management
+                    </h2>
+                    <p style="color: #94a3b8; margin: 5px 0 0 0; font-size: 14px;">
+                        Manage teacher accounts, assign teaching courses, and designate Class In-Charge roles.
+                    </p>
+                </div>
+                <button class="actionBtn success" onclick="openTeacherModal('create')">
+                    <i class="fa fa-user-plus"></i> Register New Teacher
+                </button>
+            </div>
+
+            <!-- Filters & Search Bar -->
+            <div class="filterBar">
+                <div class="filterGroup" style="flex: 2; min-width: 260px;">
+                    <label>Search Teacher</label>
+                    <input type="text" id="searchTeacherInput" placeholder="Search by name, reg no, email..." oninput="debounceLoadTeachers()">
+                </div>
+                <div class="filterGroup" style="flex: 1; min-width: 140px;">
+                    <label>Status</label>
+                    <select id="statusFilterSelect" onchange="loadTeachers()">
+                        <option value="all">All Status</option>
+                        <option value="true" selected>Active Only</option>
+                        <option value="false">Deactivated Only</option>
+                    </select>
+                </div>
+                <button class="actionBtn" onclick="loadTeachers()"><i class="fa fa-sync"></i> Refresh</button>
+            </div>
+
+            <!-- Teachers List Table -->
+            <table class="tableContainer">
+                <thead>
+                    <tr>
+                        <th>Reg No</th>
+                        <th>Teacher Name</th>
+                        <th>Class In-Charge</th>
+                        <th>Assigned Teaching Courses</th>
+                        <th>Email & Phone</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="teachersTbody">
+                    <tr><td colspan="7" style="text-align: center; padding: 25px; color: #94a3b8;">Loading teacher records...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Create / Edit Teacher Modal -->
+    <div class="modalBackdrop" id="teacherModal">
+        <div class="modalBox">
+            <div class="modalHeader">
+                <h3 id="teacherModalTitle"><i class="fa fa-user-plus" style="color: #00bcd4;"></i> Register Teacher</h3>
+                <button class="modalClose" onclick="closeTeacherModal()">&times;</button>
+            </div>
+            <form id="teacherForm" onsubmit="handleSaveTeacher(event)">
+                <input type="hidden" id="modalTeacherId">
+                <div class="modalGrid">
+                    <div class="modalInputGroup" style="grid-column: 1 / -1;">
+                        <label>Full Name *</label>
+                        <input type="text" id="modalTeacherName" required placeholder="e.g. Dr. Sarah Jenkins">
+                    </div>
+                    <div class="modalInputGroup">
+                        <label>Teacher Reg No / ID *</label>
+                        <input type="text" id="modalTeacherRegNo" required placeholder="e.g. T1001">
+                    </div>
+                    <div class="modalInputGroup">
+                        <label>Class In-Charge Role</label>
+                        <select id="modalTeacherIncharge">
+                            <option value="">None (Standard Subject Teacher)</option>
+                        </select>
+                    </div>
+                    <div class="modalInputGroup">
+                        <label>Email Address *</label>
+                        <input type="email" id="modalTeacherEmail" required placeholder="teacher@school.com">
+                    </div>
+                    <div class="modalInputGroup">
+                        <label>Phone Number</label>
+                        <input type="text" id="modalTeacherPhone" placeholder="0771234567">
+                    </div>
+                    <div class="modalInputGroup" style="grid-column: 1 / -1;">
+                        <label>Address</label>
+                        <input type="text" id="modalTeacherAddress" placeholder="Home or office address">
+                    </div>
+                    <div class="modalInputGroup" style="grid-column: 1 / -1;">
+                        <label id="modalTeacherPasswordLabel">Password *</label>
+                        <input type="password" id="modalTeacherPassword" placeholder="Min 6 characters">
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="actionBtn" style="background: rgba(255,255,255,0.1);" onclick="closeTeacherModal()">Cancel</button>
+                    <button type="submit" class="actionBtn success"><i class="fa fa-save"></i> Save Teacher</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Assign Subjects Modal -->
+    <div class="modalBackdrop" id="assignSubjectsModal">
+        <div class="modalBox" style="max-width: 600px;">
+            <div class="modalHeader">
+                <h3><i class="fa fa-book-open" style="color: #a855f7;"></i> Assign Teaching Subjects</h3>
+                <button class="modalClose" onclick="closeAssignSubjectsModal()">&times;</button>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <p style="margin: 0 0 10px 0; font-size: 14px;">Teacher: <strong id="assignTeacherName" style="color: #38bdf8;"></strong></p>
+                <label style="font-size: 12px; color: #94a3b8; font-weight: bold; text-transform: uppercase;">Select Course to Assign:</label>
+                <div style="display: flex; gap: 10px; margin-top: 6px;">
+                    <select id="assignSubjectSelect" style="flex: 1; padding: 10px; border-radius: 8px; background: #0f172a; border: 1px solid rgba(255,255,255,0.2); color: #fff;">
+                        <option value="">-- Choose Subject --</option>
+                    </select>
+                    <button type="button" class="actionBtn success" onclick="handleAssignSubject()"><i class="fa fa-plus"></i> Assign</button>
+                </div>
+            </div>
+
+            <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                <h4 style="margin: 0 0 10px 0; font-size: 13px; color: #cbd5e1; text-transform: uppercase;">Currently Assigned Courses:</h4>
+                <div id="currentAssignedSubjectsList" style="max-height: 200px; overflow-y: auto;">
+                    <!-- Rendered dynamically -->
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                <button type="button" class="actionBtn" onclick="closeAssignSubjectsModal()">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+    <script src="admin_teachers.js"></script>
+</body>
+
+</html>

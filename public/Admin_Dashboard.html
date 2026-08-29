@@ -4,212 +4,323 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard & Attendance</title>
-    <link rel="stylesheet" href="Admin_Dashboard.css">
+    <title>Admin Dashboard - School LMS</title>
+    <link rel="stylesheet" href="Teacher_Dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .adminGrid {
+        .kpiGrid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
-        .adminCard {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #fff;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            text-align: center;
+
+        .kpiCard {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            padding: 22px;
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.25s ease;
+            cursor: pointer;
+            text-decoration: none;
         }
-        .adminCard h3 {
-            margin: 0 0 10px 0;
+
+        .kpiCard:hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.12);
+            border-color: #00bcd4;
+            box-shadow: 0 8px 25px rgba(0, 188, 212, 0.25);
+        }
+
+        .kpiCard h4 {
+            margin: 0 0 6px 0;
             font-size: 13px;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #aaa;
+            letter-spacing: 0.5px;
+            color: #94a3b8;
         }
-        .adminCard .val {
-            font-size: 34px;
-            font-weight: bold;
-            color: #00bcd4;
+
+        .kpiCard .val {
+            font-size: 32px;
+            font-weight: 800;
+            color: #ffffff;
         }
-        .adminTable {
+
+        .kpiIcon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .iconBlue { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
+        .iconGreen { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .iconPurple { background: rgba(168, 85, 247, 0.2); color: #c084fc; }
+        .iconOrange { background: rgba(249, 115, 22, 0.2); color: #fb923c; }
+
+        .dashboardSections {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboardSections {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panelCard {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            margin-bottom: 25px;
+        }
+
+        .panelHeader {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 12px;
+        }
+
+        .panelHeader h3 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #ffffff;
+        }
+
+        .quickActionsGrid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .quickActionBtn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            padding: 14px;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        .quickActionBtn:hover {
+            background: rgba(0, 188, 212, 0.2);
+            border-color: #00bcd4;
+            transform: translateY(-2px);
+        }
+
+        .recentTable {
             width: 100%;
             border-collapse: collapse;
-            background: rgba(0, 0, 0, 0.25);
-            border-radius: 10px;
-            overflow: hidden;
-            color: #fff;
-            margin-bottom: 30px;
+            font-size: 13px;
         }
-        .adminTable th, .adminTable td {
-            padding: 14px 18px;
+
+        .recentTable th, .recentTable td {
+            padding: 12px 14px;
             text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
-        .adminTable th {
-            background: rgba(255, 255, 255, 0.15);
-            font-size: 13px;
+
+        .recentTable th {
+            color: #94a3b8;
             text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
         }
-        .filterBar {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            margin-bottom: 25px;
-            background: rgba(255, 255, 255, 0.08);
-            padding: 15px 20px;
-            border-radius: 10px;
-        }
-        .filterBar label {
-            color: #ccc;
-            font-weight: bold;
-            font-size: 13px;
-        }
-        .filterBar input {
-            padding: 8px 12px;
+
+        .noticeItem {
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border-left: 4px solid #00bcd4;
             border-radius: 6px;
-            border: 1px solid rgba(255,255,255,0.2);
-            background: #2b2b3d;
-            color: #fff;
+            margin-bottom: 12px;
         }
-        .filterBtn {
-            padding: 8px 16px;
-            border-radius: 6px;
-            border: none;
-            background: #00bcd4;
-            color: #fff;
-            font-weight: bold;
-            cursor: pointer;
+
+        .noticeTitle {
+            font-weight: 700;
+            font-size: 14px;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .noticeMeta {
+            font-size: 12px;
+            color: #94a3b8;
         }
     </style>
 </head>
 
-<body>
+<body id="body">
     <div class="layoutDashboard">
-        <nav class="topNavBar DashboardPart">
-            <h1 class="dashboardMainText">Admin Dashboard</h1>
-            <a><i class="fas fa-book"></i> Subjects</a>
-            <a><i class="fas fa-calendar"></i> Exams</a>
-            <a><i class="fas fa-clock"></i> TimeTable</a>
-            <a><i class="fas fa-user-check"></i> Daily Attendance</a>
-            <a href="profile.html"><i class="fas fa-user"></i> Profile</a>
-            <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
-            <a class="logOutButton"><i class="fas fa-sign-out-alt"></i> Log Out</a>
-        </nav>
-        <div class="dashboardContainer DashboardPart" style="padding: 25px; overflow-y: auto; height: 100vh;">
-            <div style="margin-bottom: 20px;">
-                <h1 style="color: #fff; margin: 0;">School Attendance Control & Overview</h1>
-                <p style="color: #bbb; margin-top: 5px;">Monitor student attendance matching across teachers, grades, and classes.</p>
-            </div>
+        <div id="sidebar"></div>
 
-            <div class="filterBar">
-                <label><i class="fas fa-calendar-alt"></i> Attendance Date:</label>
-                <input type="date" id="adminAttendanceDate">
-                <button class="filterBtn" onclick="loadAdminAttendance()"><i class="fas fa-sync"></i> Refresh Overview</button>
-            </div>
-
-            <!-- Overview Metrics -->
-            <div class="adminGrid">
-                <div class="adminCard">
-                    <h3>School Attendance Rate</h3>
-                    <div class="val" id="adminPct">--%</div>
+        <div class="dashboardContainer DashboardPart" id="dashboardContainer" style="padding: 30px; overflow-y: auto; height: 94vh;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                <div>
+                    <h2 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800;">
+                        <i class="fa fa-chart-line" style="color: #00bcd4;"></i> Administrator Dashboard
+                    </h2>
+                    <p style="color: #94a3b8; margin: 5px 0 0 0; font-size: 14px;">
+                        Manage students, faculty, academic subjects, reports, and school operations.
+                    </p>
                 </div>
-                <div class="adminCard">
-                    <h3>Total Enrolled Students</h3>
-                    <div class="val" style="color: #fff;" id="adminTotal">0</div>
-                </div>
-                <div class="adminCard">
-                    <h3>Total Present</h3>
-                    <div class="val" style="color: #4CAF50;" id="adminPresent">0</div>
-                </div>
-                <div class="adminCard">
-                    <h3>Total Absent</h3>
-                    <div class="val" style="color: #f44336;" id="adminAbsent">0</div>
+                <div style="display: flex; gap: 10px;">
+                    <a href="admin_students.html" class="quickActionBtn" style="background: #00bcd4; color: #fff; border: none;">
+                        <i class="fa fa-user-plus"></i> Add Student
+                    </a>
+                    <a href="admin_teachers.html" class="quickActionBtn" style="background: #3b82f6; color: #fff; border: none;">
+                        <i class="fa fa-chalkboard-teacher"></i> Add Teacher
+                    </a>
                 </div>
             </div>
 
-            <!-- Grade-by-Grade Attendance Breakdown -->
-            <h3 style="color: #fff; margin: 25px 0 15px 0;"><i class="fas fa-school"></i> Grade-by-Grade Daily Attendance</h3>
-            <table class="adminTable">
-                <thead>
-                    <tr>
-                        <th>Grade Code</th>
-                        <th>Grade Name</th>
-                        <th>Student Count</th>
-                        <th>Present</th>
-                        <th>Absent</th>
-                        <th>Late</th>
-                        <th>Attendance Rate</th>
-                    </tr>
-                </thead>
-                <tbody id="adminGradeTbody">
-                    <tr><td colspan="7" style="text-align: center;">Loading admin attendance summary...</td></tr>
-                </tbody>
-            </table>
+            <!-- KPI Cards -->
+            <div class="kpiGrid">
+                <a href="admin_students.html" class="kpiCard">
+                    <div>
+                        <h4>Total Students</h4>
+                        <div class="val" id="kpiStudents">...</div>
+                    </div>
+                    <div class="kpiIcon iconBlue"><i class="fa fa-user-graduate"></i></div>
+                </a>
+                <a href="admin_teachers.html" class="kpiCard">
+                    <div>
+                        <h4>Total Teachers</h4>
+                        <div class="val" id="kpiTeachers">...</div>
+                    </div>
+                    <div class="kpiIcon iconGreen"><i class="fa fa-chalkboard-teacher"></i></div>
+                </a>
+                <a href="admin_subjects.html" class="kpiCard">
+                    <div>
+                        <h4>Subjects & Classes</h4>
+                        <div class="val" id="kpiSubjects">...</div>
+                    </div>
+                    <div class="kpiIcon iconPurple"><i class="fa fa-book-open"></i></div>
+                </a>
+                <a href="admin_reports.html" class="kpiCard">
+                    <div>
+                        <h4>Upcoming Exams</h4>
+                        <div class="val" id="kpiExams">...</div>
+                    </div>
+                    <div class="kpiIcon iconOrange"><i class="fa fa-calendar-check"></i></div>
+                </a>
+            </div>
+
+            <!-- Dashboard Split Sections -->
+            <div class="dashboardSections">
+                <!-- Left Column -->
+                <div>
+                    <!-- Attendance Analytics Snapshot Chart -->
+                    <div class="panelCard">
+                        <div class="panelHeader">
+                            <h3><i class="fa fa-chart-line" style="color: #4ade80;"></i> School-Wide Attendance Timeline</h3>
+                            <a href="admin_reports.html" style="color: #4ade80; font-size: 13px; text-decoration: none; font-weight: 600;">Detailed Analytics &rarr;</a>
+                        </div>
+                        <div style="height: 220px; position: relative;">
+                            <canvas id="dashAttendanceChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Recently Enrolled Students -->
+                    <div class="panelCard">
+                        <div class="panelHeader">
+                            <h3><i class="fa fa-users" style="color: #38bdf8;"></i> Recently Registered Students</h3>
+                            <a href="admin_students.html" style="color: #38bdf8; font-size: 13px; text-decoration: none; font-weight: 600;">View All &rarr;</a>
+                        </div>
+                        <table class="recentTable">
+                            <thead>
+                                <tr>
+                                    <th>Reg No</th>
+                                    <th>Student Name</th>
+                                    <th>Grade / Class</th>
+                                    <th>Enrolled Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentStudentsTbody">
+                                <tr><td colspan="4" style="text-align: center; color: #94a3b8; padding: 20px;">Loading student records...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Quick Navigation Cards -->
+                    <div class="panelCard">
+                        <div class="panelHeader">
+                            <h3><i class="fa fa-bolt" style="color: #facc15;"></i> System Management Shortcuts</h3>
+                        </div>
+                        <div class="quickActionsGrid">
+                            <a href="admin_students.html" class="quickActionBtn">
+                                <i class="fa fa-user-graduate" style="color: #38bdf8;"></i> Manage Student Records
+                            </a>
+                            <a href="admin_teachers.html" class="quickActionBtn">
+                                <i class="fa fa-chalkboard-teacher" style="color: #4ade80;"></i> Faculty & In-Charge Setup
+                            </a>
+                            <a href="admin_subjects.html" class="quickActionBtn">
+                                <i class="fa fa-book-open" style="color: #c084fc;"></i> Course & Class Catalog
+                            </a>
+                            <a href="admin_reports.html" class="quickActionBtn">
+                                <i class="fa fa-chart-pie" style="color: #fb923c;"></i> Performance & Attendance Reports
+                            </a>
+                            <a href="admin_settings.html" class="quickActionBtn">
+                                <i class="fa fa-sliders" style="color: #f43f5e;"></i> School System Settings
+                            </a>
+                            <a href="settings.html" class="quickActionBtn">
+                                <i class="fa fa-lock" style="color: #a855f7;"></i> Security & Password
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Announcements & System Info -->
+                <div>
+                    <div class="panelCard">
+                        <div class="panelHeader">
+                            <h3><i class="fa fa-bullhorn" style="color: #f97316;"></i> Recent Notices</h3>
+                        </div>
+                        <div id="recentAnnouncementsList">
+                            <p style="color: #94a3b8; font-size: 13px;">Loading announcements...</p>
+                        </div>
+                    </div>
+
+                    <div class="panelCard" style="background: rgba(0, 188, 212, 0.08); border-color: rgba(0, 188, 212, 0.3);">
+                        <h4 style="margin: 0 0 10px 0; color: #00bcd4; font-size: 15px;"><i class="fa fa-shield-halved"></i> Administrator Role</h4>
+                        <p style="font-size: 13px; color: #cbd5e1; line-height: 1.5; margin: 0;">
+                            You are logged in with Super Administrator privileges. Any updates to student rosters, class teachers, and subject assignments take effect across all teacher and student portals in real time.
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const dateInput = document.getElementById("adminAttendanceDate");
-            if (dateInput) {
-                dateInput.value = new Date().toISOString().split("T")[0];
-            }
-            loadAdminAttendance();
-        });
-
-        async function loadAdminAttendance() {
-            const dateInput = document.getElementById("adminAttendanceDate");
-            const date = dateInput ? dateInput.value : "";
-
-            const token = localStorage.getItem("token");
-            if (!token) return;
-
-            try {
-                const response = await fetch(`http://localhost:3000/api/admin-attendance-summary?date=${encodeURIComponent(date)}`, {
-                    headers: { "Authorization": `Bearer ${token}` }
-                });
-
-                const data = await response.json();
-                if (!data.success) return;
-
-                document.getElementById("adminPct").textContent = `${data.summary.percentage}%`;
-                document.getElementById("adminTotal").textContent = data.summary.total_students;
-                document.getElementById("adminPresent").textContent = data.summary.present_count;
-                document.getElementById("adminAbsent").textContent = data.summary.absent_count;
-
-                const tbody = document.getElementById("adminGradeTbody");
-                tbody.innerHTML = "";
-
-                if (data.gradeBreakdown.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center;">No grades found.</td></tr>`;
-                    return;
-                }
-
-                data.gradeBreakdown.forEach(g => {
-                    const rate = g.student_count > 0 ? Math.round(((g.present_count + g.late_count) / g.student_count) * 100) : 0;
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `
-                        <td><strong>${g.grade_id}</strong></td>
-                        <td>${g.grade_name}</td>
-                        <td>${g.student_count}</td>
-                        <td style="color: #4CAF50; font-weight: bold;">${g.present_count}</td>
-                        <td style="color: #f44336; font-weight: bold;">${g.absent_count}</td>
-                        <td style="color: #ff9800; font-weight: bold;">${g.late_count}</td>
-                        <td><strong>${rate}%</strong></td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-
-            } catch (err) {
-                console.error("Error loading admin attendance:", err);
-            }
-        }
-    </script>
+    <script src="dashboard.js"></script>
+    <script src="admin_dashboard.js"></script>
 </body>
 
 </html>
