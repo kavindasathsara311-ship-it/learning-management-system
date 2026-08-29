@@ -13,7 +13,7 @@
             display: flex;
             gap: 15px;
             align-items: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             background: rgba(255, 255, 255, 0.08);
             padding: 15px 20px;
             border-radius: 10px;
@@ -34,7 +34,7 @@
             padding: 8px 14px;
             border-radius: 6px;
             border: 1px solid rgba(255,255,255,0.2);
-            background: #2b2b3d;
+            background: #1e293b;
             color: #fff;
             font-size: 14px;
         }
@@ -108,6 +108,15 @@
             cursor: pointer;
             font-size: 13px;
         }
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .badge-present { background: #4CAF50; color: #fff; }
+        .badge-absent { background: #f44336; color: #fff; }
+        .badge-late { background: #ff9800; color: #fff; }
         .reasonBox {
             background: rgba(255, 255, 255, 0.1);
             padding: 4px 8px;
@@ -123,21 +132,24 @@
         <div id="sidebar"></div>
 
         <div class="dashboardContainer DashboardPart" id="dashboardContainer" style="padding: 25px; overflow-y: auto; height: 94vh;">
-            <h2 style="color: #fff; margin-bottom: 20px;"><i class="fas fa-calendar-check"></i> Daily Student Attendance Management</h2>
+            <h2 style="color: #fff; margin: 0 0 15px 0;"><i class="fas fa-calendar-check" style="color: #00bcd4;"></i> Student Attendance Portal</h2>
+
+            <!-- In-Charge vs View-Only Role Banner -->
+            <div id="attendanceRoleBanner"></div>
 
             <div class="controlBar">
-                <div class="controlGroup">
-                    <label>Select Subject / Class</label>
+                <div class="controlGroup" style="flex: 1.5; min-width: 260px;">
+                    <label>Select Class / Subject</label>
                     <select id="gradeSelect" onchange="loadTeacherAttendance()">
-                        <option value="">Loading classes...</option>
+                        <option value="">Loading attendance classes...</option>
                     </select>
                 </div>
-                <div class="controlGroup">
+                <div class="controlGroup" style="flex: 1; min-width: 150px;">
                     <label>Select Date</label>
                     <input type="date" id="attendanceDate" onchange="loadTeacherAttendance()">
                 </div>
                 <button class="actionBtn" onclick="loadTeacherAttendance()"><i class="fas fa-search"></i> Load Attendance</button>
-                <button class="actionBtn markAll" onclick="markAllPresent()"><i class="fas fa-check-double"></i> Mark All Present</button>
+                <button class="actionBtn markAll" id="markAllBtn" onclick="markAllPresent()"><i class="fas fa-check-double"></i> Mark All Present</button>
             </div>
 
             <!-- Summary metrics -->
@@ -176,7 +188,7 @@
             </table>
 
             <div style="margin-top: 25px; display: flex; justify-content: flex-end;">
-                <button class="actionBtn" style="padding: 12px 25px; font-size: 16px;" onclick="saveTeacherAttendance()"><i class="fas fa-save"></i> Save Attendance Records</button>
+                <button class="actionBtn" id="saveAttendanceBtn" style="padding: 12px 25px; font-size: 16px;" onclick="saveTeacherAttendance()"><i class="fas fa-save"></i> Save Attendance Records</button>
             </div>
         </div>
     </div>

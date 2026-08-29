@@ -115,23 +115,25 @@ async function insertStudent(userData) {
 }
 
 async function insertTeacher(userData) {
-  const { name, id, email, phone, password, teachingSubjects } = userData;
+  const { name, id, email, phone, password, teachingSubjects, incharge_grade_id } = userData;
   const hashedPassword = await bcrypt.hash(password, 10);
   
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     const result = await client.query(
-      "INSERT INTO teacher (teacher_name, teacher_reg_no, email, phone_number, password) VALUES ($1, $2, $3, $4, $5) RETURNING teacher_id",
-      [name, id, email, phone, hashedPassword]
+      "INSERT INTO teacher (teacher_name, teacher_reg_no, email, phone_number, password, incharge_grade_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING teacher_id",
+      [name, id, email, phone, hashedPassword, incharge_grade_id || null]
     );
     const internalTeacherId = result.rows[0].teacher_id;
 
-    for (const subId of teachingSubjects) {
-      await client.query(
-        "INSERT INTO teacher_subjects (teacher_id, subject_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
-        [internalTeacherId, subId]
-      );
+    if (Array.isArray(teachingSubjects)) {
+      for (const subId of teachingSubjects) {
+        await client.query(
+          "INSERT INTO teacher_subjects (teacher_id, subject_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+          [internalTeacherId, subId]
+        );
+      }
     }
     await client.query("COMMIT");
   } catch (err) {
@@ -153,6 +155,21 @@ app.get("/api/grades", async (req, res) => {
   } catch (err) {
     console.error("Error fetching grades:", err);
     res.status(500).json({ error: "Failed to fetch grades" });
+  }
+});
+
+app.get("/api/available-subjects-catalog", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT s.subject_id, s.subject_name, s.grade_id, g.grade_name
+       FROM subject s
+       LEFT JOIN grade g ON s.grade_id = g.grade_id
+       ORDER BY g.grade_id ASC, s.subject_name ASC`
+    );
+    res.json({ success: true, catalog: result.rows });
+  } catch (err) {
+    console.error("Error fetching subjects catalog:", err);
+    res.status(500).json({ success: false, message: "Failed to load subjects" });
   }
 });
 
@@ -223,13 +240,34 @@ app.post("/register-init", async (req, res) => {
        }
        const validSubjectIds = [];
        for (const subjectInput of subjectInputs) {
-         const subjRes = await pool.query("SELECT subject_id FROM subject WHERE subject_id = $1 OR subject_name ILIKE $2 LIMIT 1", [subjectInput, `%${subjectInput}%`]);
+         const subjRes = await pool.query(
+           "SELECT subject_id FROM subject WHERE subject_id = $1 OR subject_name ILIKE $2 LIMIT 1", 
+           [subjectInput, `%${subjectInput}%`]
+         );
          if (subjRes.rows.length === 0) {
            return res.status(400).send(`Invalid Teaching Subject: ${subjectInput}. Please verify the subject name or ID.`);
          }
          validSubjectIds.push(subjRes.rows[0].subject_id);
        }
        userData.teachingSubjects = validSubjectIds;
+
+       // Handle in-charge class
+       if (userData.is_incharge === true || userData.is_incharge === "true" || userData.is_incharge === "yes") {
+         const inchargeGrade = String(userData.incharge_grade_id || '').trim();
+         if (!inchargeGrade) {
+           return res.status(400).send("Please select which class/grade you are in charge of.");
+         }
+         const gradeRes = await pool.query(
+           "SELECT grade_id FROM grade WHERE grade_id = $1 OR grade_name ILIKE $2 LIMIT 1",
+           [inchargeGrade, inchargeGrade]
+         );
+         if (gradeRes.rows.length === 0) {
+           return res.status(400).send(`Invalid In-Charge Grade: ${inchargeGrade}`);
+         }
+         userData.incharge_grade_id = gradeRes.rows[0].grade_id;
+       } else {
+         userData.incharge_grade_id = null;
+       }
     }
   } catch (err) {
     console.error("Error checking existing user:", err);
@@ -1772,31 +1810,59 @@ app.get("/api/student-course-materials", verifyToken, async (req, res) => {
 async function resolveTeacherId(req) {
   const teacherRegNo = req.user.id;
   const result = await pool.query(
-    "SELECT teacher_id, teacher_name, email FROM teacher WHERE teacher_reg_no = $1 OR teacher_id::text = $1",
+    `SELECT t.teacher_id, t.teacher_name, t.email, t.incharge_grade_id, g.grade_name AS incharge_grade_name 
+     FROM teacher t
+     LEFT JOIN grade g ON t.incharge_grade_id = g.grade_id
+     WHERE t.teacher_reg_no = $1 OR t.teacher_id::text = $1`,
     [teacherRegNo]
   );
   if (result.rows.length === 0) return null;
   return result.rows[0];
 }
 
-// GET /api/grades - Return all grades
-app.get("/api/grades", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT grade_id, grade_name FROM grade ORDER BY grade_id ASC");
-    res.json(result.rows);
-  } catch (err) {
-    console.error("Error fetching grades:", err);
-    res.status(500).json({ error: "Failed to fetch grades" });
+// GET /api/teacher-attendance-context - Returns in-charge status and teaching classes
+app.get("/api/teacher-attendance-context", verifyToken, async (req, res) => {
+  if (req.user.role !== "teacher" && req.user.role !== "admin") {
+    return res.status(403).json({ success: false, message: "Access denied" });
   }
-});
 
-app.get("/api/teacher-attendance-grades", verifyToken, async (req, res) => {
   try {
-    const result = await pool.query("SELECT grade_id, grade_name FROM grade ORDER BY grade_id ASC");
-    res.json({ success: true, grades: result.rows });
+    const teacher = await resolveTeacherId(req);
+    if (!teacher) return res.status(404).json({ success: false, message: "Teacher account not found" });
+
+    // Fetch assigned teaching classes
+    const classesRes = await pool.query(
+      `SELECT ts.subject_id, s.subject_name, g.grade_name, g.grade_id 
+       FROM teacher_subjects ts
+       INNER JOIN subject s ON ts.subject_id = s.subject_id
+       INNER JOIN grade g ON s.grade_id = g.grade_id
+       WHERE ts.teacher_id = $1
+       ORDER BY g.grade_id ASC, s.subject_name ASC`,
+      [teacher.teacher_id]
+    );
+
+    // If teacher is in-charge of a grade, also get any subjects in that grade
+    let inchargeSubjectId = null;
+    if (teacher.incharge_grade_id) {
+      const inchargeSubRes = await pool.query(
+        "SELECT subject_id FROM subject WHERE grade_id = $1 LIMIT 1",
+        [teacher.incharge_grade_id]
+      );
+      if (inchargeSubRes.rows.length > 0) {
+        inchargeSubjectId = inchargeSubRes.rows[0].subject_id;
+      }
+    }
+
+    res.json({
+      success: true,
+      incharge_grade_id: teacher.incharge_grade_id,
+      incharge_grade_name: teacher.incharge_grade_name,
+      incharge_subject_id: inchargeSubjectId,
+      classes: classesRes.rows
+    });
   } catch (err) {
-    console.error("Error fetching attendance grades:", err);
-    res.status(500).json({ success: false, message: "Failed to fetch grades" });
+    console.error("Error loading teacher attendance context:", err);
+    res.status(500).json({ success: false, message: "Failed to load context" });
   }
 });
 
@@ -1806,27 +1872,44 @@ app.get("/api/class-roster", verifyToken, async (req, res) => {
     return res.status(403).json({ success: false, message: "Access denied" });
   }
 
-  const { subject_id } = req.query;
-  if (!subject_id) {
-    return res.status(400).json({ success: false, message: "subject_id is required" });
-  }
+  const { subject_id, grade_id } = req.query;
 
   try {
-    const result = await pool.query(
-      `SELECT 
+    let query;
+    let params;
+
+    if (subject_id) {
+      query = `SELECT 
         s.student_id,
         s.student_reg_no,
         s.student_name,
         s.email,
-        g.grade_name
+        g.grade_name,
+        s.grade_id
       FROM enrolled_subjects es
       JOIN student s ON es.student_id = s.student_id
       LEFT JOIN grade g ON s.grade_id = g.grade_id
       WHERE es.subject_id = $1
-      ORDER BY s.student_name ASC`,
-      [subject_id]
-    );
+      ORDER BY s.student_name ASC`;
+      params = [subject_id];
+    } else if (grade_id) {
+      query = `SELECT 
+        s.student_id,
+        s.student_reg_no,
+        s.student_name,
+        s.email,
+        g.grade_name,
+        s.grade_id
+      FROM student s
+      LEFT JOIN grade g ON s.grade_id = g.grade_id
+      WHERE s.grade_id = $1
+      ORDER BY s.student_name ASC`;
+      params = [grade_id];
+    } else {
+      return res.status(400).json({ success: false, message: "subject_id or grade_id is required" });
+    }
 
+    const result = await pool.query(query, params);
     res.json({ success: true, students: result.rows });
   } catch (err) {
     console.error("Error fetching class roster:", err);
@@ -1834,25 +1917,50 @@ app.get("/api/class-roster", verifyToken, async (req, res) => {
   }
 });
 
-// 2. POST /api/mark-attendance - Bulk upsert attendance records
+// 2. POST /api/mark-attendance - Bulk upsert attendance records (In-Charge Teacher ONLY)
 app.post("/api/mark-attendance", verifyToken, async (req, res) => {
   if (req.user.role !== "teacher" && req.user.role !== "admin") {
     return res.status(403).json({ success: false, message: "Access denied" });
   }
 
-  const { subject_id, date, records } = req.body;
-  if (!subject_id || !date || !Array.isArray(records)) {
-    return res.status(400).json({ success: false, message: "subject_id, date, and records array are required" });
+  const { subject_id, grade_id, date, records } = req.body;
+  if ((!subject_id && !grade_id) || !date || !Array.isArray(records)) {
+    return res.status(400).json({ success: false, message: "subject_id/grade_id, date, and records array are required" });
   }
 
   try {
     const teacher = await resolveTeacherId(req);
-    const teacherId = teacher ? teacher.teacher_id : null;
+    if (!teacher) return res.status(404).json({ success: false, message: "Teacher account not found" });
+
+    // Determine target grade_id
+    let targetGradeId = grade_id;
+    let targetSubjectId = subject_id;
+
+    if (subject_id && !targetGradeId) {
+      const subjRes = await pool.query("SELECT grade_id FROM subject WHERE subject_id = $1", [subject_id]);
+      if (subjRes.rows.length > 0) targetGradeId = subjRes.rows[0].grade_id;
+    }
+
+    if (!targetSubjectId && targetGradeId) {
+      const subjRes = await pool.query("SELECT subject_id FROM subject WHERE grade_id = $1 LIMIT 1", [targetGradeId]);
+      if (subjRes.rows.length > 0) targetSubjectId = subjRes.rows[0].subject_id;
+    }
+
+    // Permission Enforcement: Only Class In-Charge teacher can take/modify attendance
+    const isInCharge = teacher.incharge_grade_id && (teacher.incharge_grade_id === targetGradeId || teacher.incharge_grade_id === grade_id);
+    
+    if (!isInCharge && req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: `Access Denied: You are not the Class In-Charge teacher for class ${targetGradeId || 'selected'}. You can only view attendance for your teaching subjects.`
+      });
+    }
 
     for (const rec of records) {
       const studentId = rec.student_id;
       const status = rec.status || "Present";
       const reason = rec.reason || "";
+      const effectiveSubId = targetSubjectId || "GEN_ATT";
 
       await pool.query(
         `INSERT INTO attendance (student_id, subject_id, date, status, reason, marked_by, created_at)
@@ -1863,11 +1971,11 @@ app.post("/api/mark-attendance", verifyToken, async (req, res) => {
            reason = EXCLUDED.reason,
            marked_by = EXCLUDED.marked_by,
            created_at = NOW()`,
-        [studentId, subject_id, date, status, reason, teacherId]
+        [studentId, effectiveSubId, date, status, reason, teacher.teacher_id]
       );
     }
 
-    res.json({ success: true, message: "Attendance marked successfully" });
+    res.json({ success: true, message: "Attendance marked successfully by Class In-Charge teacher" });
   } catch (err) {
     console.error("Error marking attendance:", err);
     res.status(500).json({ success: false, message: "Failed to mark attendance: " + err.message });
@@ -1880,29 +1988,69 @@ app.get("/api/teacher-attendance-view", verifyToken, async (req, res) => {
     return res.status(403).json({ success: false, message: "Access denied" });
   }
 
-  const { subject_id, date } = req.query;
-  if (!subject_id || !date) {
-    return res.status(400).json({ success: false, message: "subject_id and date are required" });
+  const { subject_id, grade_id, date } = req.query;
+  if ((!subject_id && !grade_id) || !date) {
+    return res.status(400).json({ success: false, message: "subject_id or grade_id and date are required" });
   }
 
   try {
-    const result = await pool.query(
-      `SELECT 
+    const teacher = await resolveTeacherId(req);
+    if (!teacher) return res.status(404).json({ success: false, message: "Teacher not found" });
+
+    let targetGradeId = grade_id;
+    if (subject_id && !targetGradeId) {
+      const subjRes = await pool.query("SELECT grade_id FROM subject WHERE subject_id = $1", [subject_id]);
+      if (subjRes.rows.length > 0) targetGradeId = subjRes.rows[0].grade_id;
+    }
+
+    const canEdit = !!(teacher.incharge_grade_id && (teacher.incharge_grade_id === targetGradeId || teacher.incharge_grade_id === grade_id));
+
+    let query;
+    let params;
+
+    if (subject_id) {
+      query = `SELECT 
         s.student_id,
         s.student_reg_no,
         s.student_name,
         COALESCE(a.status, 'Present') AS status,
         COALESCE(a.reason, '') AS reason,
-        a.created_at AS marked_at
+        a.created_at AS marked_at,
+        t.teacher_name AS marked_by_teacher
       FROM enrolled_subjects es
       JOIN student s ON es.student_id = s.student_id
-      LEFT JOIN attendance a ON a.student_id = s.student_id AND a.subject_id = es.subject_id AND a.date = $2::date
+      LEFT JOIN attendance a ON a.student_id = s.student_id AND (a.subject_id = es.subject_id OR a.subject_id = $1) AND a.date = $2::date
+      LEFT JOIN teacher t ON a.marked_by = t.teacher_id
       WHERE es.subject_id = $1
-      ORDER BY s.student_name ASC`,
-      [subject_id, date]
-    );
+      ORDER BY s.student_name ASC`;
+      params = [subject_id, date];
+    } else {
+      query = `SELECT 
+        s.student_id,
+        s.student_reg_no,
+        s.student_name,
+        COALESCE(a.status, 'Present') AS status,
+        COALESCE(a.reason, '') AS reason,
+        a.created_at AS marked_at,
+        t.teacher_name AS marked_by_teacher
+      FROM student s
+      LEFT JOIN attendance a ON a.student_id = s.student_id AND a.date = $2::date
+      LEFT JOIN teacher t ON a.marked_by = t.teacher_id
+      WHERE s.grade_id = $1
+      ORDER BY s.student_name ASC`;
+      params = [targetGradeId, date];
+    }
 
-    res.json({ success: true, records: result.rows });
+    const result = await pool.query(query, params);
+
+    res.json({
+      success: true,
+      can_edit: canEdit,
+      incharge_grade_id: teacher.incharge_grade_id,
+      incharge_grade_name: teacher.incharge_grade_name,
+      target_grade_id: targetGradeId,
+      records: result.rows
+    });
   } catch (err) {
     console.error("Error viewing attendance:", err);
     res.status(500).json({ success: false, message: "Failed to load attendance view" });

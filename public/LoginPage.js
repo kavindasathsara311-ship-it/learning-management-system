@@ -58,6 +58,49 @@ const studentName = document.getElementById('studentName');
 const otpWrapper = document.getElementById('otpWrapper');
 const otpDigits = document.querySelectorAll('.otp-digit');
 const verifyOtpButton = document.getElementById('verifyOtpButton');
+
+// Teacher In-Charge Elements
+const teacherIsInCharge = document.getElementById('teacherIsInCharge');
+const inchargeClassContainer = document.getElementById('inchargeClassContainer');
+const teacherInchargeGrade = document.getElementById('teacherInchargeGrade');
+
+// Load Grades & Subjects Catalogs
+async function loadSignUpCatalogs() {
+    try {
+        // 1. Load Grades
+        const gradesRes = await fetch('/api/grades');
+        const grades = await gradesRes.json();
+        const gradeOptions = document.getElementById('gradeOptions');
+        if (gradeOptions && Array.isArray(grades)) {
+            gradeOptions.innerHTML = grades.map(g => `<option value="${g.grade_id}">${g.grade_name}</option>`).join('');
+        }
+        if (teacherInchargeGrade && Array.isArray(grades)) {
+            teacherInchargeGrade.innerHTML = `<option value="">-- Select In-Charge Class / Grade --</option>` +
+                grades.map(g => `<option value="${g.grade_id}">${g.grade_name} (${g.grade_id})</option>`).join('');
+        }
+
+        // 2. Load Subjects
+        const subjRes = await fetch('/api/available-subjects-catalog');
+        const subjData = await subjRes.json();
+        const teacherSubjectOptions = document.getElementById('teacherSubjectOptions');
+        if (teacherSubjectOptions && subjData.success && Array.isArray(subjData.catalog)) {
+            teacherSubjectOptions.innerHTML = subjData.catalog.map(s => 
+                `<option value="${s.subject_id}">${s.subject_name} - ${s.grade_name || s.grade_id} (${s.subject_id})</option>`
+            ).join('');
+        }
+    } catch (e) {
+        console.error("Error loading signup catalogs:", e);
+    }
+}
+document.addEventListener('DOMContentLoaded', loadSignUpCatalogs);
+
+if (teacherIsInCharge) {
+    teacherIsInCharge.addEventListener('change', () => {
+        if (inchargeClassContainer) {
+            inchargeClassContainer.style.display = teacherIsInCharge.checked ? 'block' : 'none';
+        }
+    });
+}
 const resendOtpButton = document.getElementById('resendOtpButton');
 const cancelOtp = document.getElementById('cancelOtp');
 
@@ -164,6 +207,7 @@ signUpTeacherSubjectCount.addEventListener('input', () => {
         const input = document.createElement('input');
         input.type = 'text';
         input.className = 'dynamic-subject-input';
+        input.setAttribute('list', 'teacherSubjectOptions');
         // Applying the same styles as other inputs logically
         input.style.width = '25vw';
         input.style.height = '5vh';
@@ -171,10 +215,10 @@ signUpTeacherSubjectCount.addEventListener('input', () => {
         input.style.border = 'none';
         input.style.background = 'transparent';
         input.style.borderBottom = '2px solid white';
-        input.style.marginTop = '3vh';
+        input.style.marginTop = '2vh';
         input.style.color = 'white';
         input.style.fontSize = '13px';
-        input.placeholder = `Teaching Subject ${i + 1}`;
+        input.placeholder = `Select Teaching Subject ${i + 1} (e.g. s1001A)`;
         input.required = true;
         dynamicSubjectsContainer.appendChild(input);
     }
@@ -460,6 +504,14 @@ signUpTeacherButton.addEventListener('click', (e) => {
         return;
     }
 
+    if (teacherIsInCharge && teacherIsInCharge.checked) {
+        if (!teacherInchargeGrade.value) {
+            alert("Please select the class / grade you are in charge of.");
+            teacherInchargeGrade.focus();
+            return;
+        }
+    }
+
     addTeacher();
 });
 
@@ -484,6 +536,9 @@ function addTeacher() {
     const subjectInputs = dynamicSubjectsContainer.querySelectorAll('.dynamic-subject-input');
     const teachingSubjectsArray = Array.from(subjectInputs).map(inp => inp.value.trim());
 
+    const isChecked = teacherIsInCharge ? teacherIsInCharge.checked : false;
+    const inchargeGradeVal = isChecked && teacherInchargeGrade ? teacherInchargeGrade.value : null;
+
     const userData = {
         name: signUpTeacherName.value,
         id: signUpTeacherRegisterNumber.value,
@@ -491,6 +546,8 @@ function addTeacher() {
         phone: signUpTeacherTelePhoneNumber.value,
         password: signUpTeacherPassword.value,
         teachingSubjects: teachingSubjectsArray,
+        is_incharge: isChecked,
+        incharge_grade_id: inchargeGradeVal,
         role: 'teacher'
     };
     initiateRegistration(userData);
