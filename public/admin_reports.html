@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports & Analytics - Admin Portal</title>
+    <link rel="stylesheet" href="Teacher_Dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .reportTabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            padding-bottom: 12px;
+            overflow-x: auto;
+        }
+
+        .reportTabBtn {
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.05);
+            color: #cbd5e1;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .reportTabBtn.active,
+        .reportTabBtn:hover {
+            background: #00bcd4;
+            color: #ffffff;
+            border-color: #00bcd4;
+            box-shadow: 0 4px 15px rgba(0, 188, 212, 0.3);
+        }
+
+        .kpiGrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .kpiCard {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            padding: 18px;
+            color: #ffffff;
+        }
+
+        .kpiCard h4 {
+            margin: 0 0 6px 0;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #94a3b8;
+            letter-spacing: 0.5px;
+        }
+
+        .kpiCard .val {
+            font-size: 28px;
+            font-weight: 800;
+            color: #38bdf8;
+        }
+
+        .tableContainer {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            overflow: hidden;
+            color: #ffffff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+            margin-bottom: 30px;
+        }
+
+        .tableContainer th,
+        .tableContainer td {
+            padding: 14px 18px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .tableContainer th {
+            background: rgba(255, 255, 255, 0.12);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #cbd5e1;
+        }
+
+        .progressBar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .progressFill {
+            height: 100%;
+            border-radius: 4px;
+            background: #22c55e;
+        }
+    </style>
+</head>
+
+<body id="body">
+    <div class="layoutDashboard">
+        <div id="sidebar"></div>
+
+        <div class="dashboardContainer DashboardPart" id="dashboardContainer" style="padding: 30px; overflow-y: auto; height: 94vh;">
+            <div style="margin-bottom: 25px;">
+                <h2 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800;">
+                    <i class="fa fa-chart-pie" style="color: #00bcd4;"></i> School Reports & Analytics
+                </h2>
+                <p style="color: #94a3b8; margin: 5px 0 0 0; font-size: 14px;">
+                    Comprehensive institutional insights into enrollment, attendance trends, exam performance, and syllabus completion.
+                </p>
+            </div>
+
+            <!-- Report Category Navigation Tabs -->
+            <div class="reportTabs">
+                <button class="reportTabBtn active" onclick="switchReportTab('enrollment')">
+                    <i class="fa fa-users"></i> Enrollment Overview
+                </button>
+                <button class="reportTabBtn" onclick="switchReportTab('attendance')">
+                    <i class="fa fa-calendar-check"></i> Attendance Analytics
+                </button>
+                <button class="reportTabBtn" onclick="switchReportTab('results')">
+                    <i class="fa fa-square-poll-vertical"></i> Academic Results
+                </button>
+                <button class="reportTabBtn" onclick="switchReportTab('coursework')">
+                    <i class="fa fa-chalkboard-user"></i> Coursework & Syllabus
+                </button>
+            </div>
+
+            <!-- TAB 1: Enrollment Report -->
+            <div id="tabEnrollment" class="tabContent">
+                <h3 style="color: #ffffff; margin: 0 0 15px 0;"><i class="fa fa-users" style="color: #38bdf8;"></i> Student Distribution by Grade / Class</h3>
+                <table class="tableContainer">
+                    <thead>
+                        <tr>
+                            <th>Grade / Class ID</th>
+                            <th>Grade Name</th>
+                            <th>Active Students Count</th>
+                            <th>Enrollment Ratio</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gradeEnrollmentTbody">
+                        <tr><td colspan="4" style="text-align: center; color: #94a3b8; padding: 20px;">Loading enrollment data...</td></tr>
+                    </tbody>
+                </table>
+
+                <h3 style="color: #ffffff; margin: 30px 0 15px 0;"><i class="fa fa-book-open" style="color: #c084fc;"></i> Course Enrollment Popularity</h3>
+                <table class="tableContainer">
+                    <thead>
+                        <tr>
+                            <th>Subject Code</th>
+                            <th>Subject Name</th>
+                            <th>Grade</th>
+                            <th>Enrolled Students</th>
+                        </tr>
+                    </thead>
+                    <tbody id="subjectEnrollmentTbody">
+                        <tr><td colspan="4" style="text-align: center; color: #94a3b8; padding: 20px;">Loading subject data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- TAB 2: Attendance Report -->
+            <div id="tabAttendance" class="tabContent" style="display: none;">
+                <div class="kpiGrid">
+                    <div class="kpiCard">
+                        <h4>Overall Attendance Rate</h4>
+                        <div class="val" id="attOverallRate" style="color: #4ade80;">...</div>
+                    </div>
+                    <div class="kpiCard">
+                        <h4>Total Present Records</h4>
+                        <div class="val" id="attPresentCount" style="color: #38bdf8;">...</div>
+                    </div>
+                    <div class="kpiCard">
+                        <h4>Total Absent Records</h4>
+                        <div class="val" id="attAbsentCount" style="color: #f87171;">...</div>
+                    </div>
+                    <div class="kpiCard">
+                        <h4>Total Late Records</h4>
+                        <div class="val" id="attLateCount" style="color: #fb923c;">...</div>
+                    </div>
+                </div>
+
+                <h3 style="color: #ffffff; margin: 20px 0 15px 0;"><i class="fa fa-calendar-days" style="color: #4ade80;"></i> Grade-by-Grade Attendance Breakdown</h3>
+                <table class="tableContainer">
+                    <thead>
+                        <tr>
+                            <th>Grade / Class</th>
+                            <th>Total Attendance Logs</th>
+                            <th>Present Logs</th>
+                            <th>Attendance % Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gradeAttendanceTbody">
+                        <tr><td colspan="4" style="text-align: center; color: #94a3b8; padding: 20px;">Loading attendance metrics...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- TAB 3: Academic Results Report -->
+            <div id="tabResults" class="tabContent" style="display: none;">
+                <div class="kpiGrid">
+                    <div class="kpiCard">
+                        <h4>School-Wide Pass Rate</h4>
+                        <div class="val" id="resPassRate" style="color: #4ade80;">...</div>
+                    </div>
+                    <div class="kpiCard">
+                        <h4>Average Score</h4>
+                        <div class="val" id="resAvgScore" style="color: #38bdf8;">...</div>
+                    </div>
+                    <div class="kpiCard">
+                        <h4>Total Passed Candidates</h4>
+                        <div class="val" id="resPassCount" style="color: #22c55e;">...</div>
+                    </div>
+                    <div class="kpiCard">
+                        <h4>Total Failed Candidates</h4>
+                        <div class="val" id="resFailCount" style="color: #f87171;">...</div>
+                    </div>
+                </div>
+
+                <h3 style="color: #ffffff; margin: 20px 0 15px 0;"><i class="fa fa-trophy" style="color: #facc15;"></i> Performance Breakdown by Subject</h3>
+                <table class="tableContainer">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Grade</th>
+                            <th>Candidates</th>
+                            <th>Average Mark</th>
+                            <th>Highest / Lowest</th>
+                            <th>Pass Rate %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="subjectResultsTbody">
+                        <tr><td colspan="6" style="text-align: center; color: #94a3b8; padding: 20px;">Loading results breakdown...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- TAB 4: Coursework & Completion Report -->
+            <div id="tabCoursework" class="tabContent" style="display: none;">
+                <div class="kpiGrid">
+                    <div class="kpiCard">
+                        <h4>Total Course Materials Uploaded</h4>
+                        <div class="val" id="cwMaterialsCount" style="color: #facc15;">...</div>
+                    </div>
+                    <div class="kpiCard">
+                        <h4>Total Assignments Created</h4>
+                        <div class="val" id="cwAssignmentsCount" style="color: #38bdf8;">...</div>
+                    </div>
+                    <div class="kpiCard">
+                        <h4>Student Submissions</h4>
+                        <div class="val" id="cwSubmissionsCount" style="color: #c084fc;">...</div>
+                    </div>
+                    <div class="kpiCard">
+                        <h4>Graded Submissions</h4>
+                        <div class="val" id="cwGradedCount" style="color: #4ade80;">...</div>
+                    </div>
+                </div>
+
+                <h3 style="color: #ffffff; margin: 20px 0 15px 0;"><i class="fa fa-folder-open" style="color: #c084fc;"></i> Subject Syllabus Progress</h3>
+                <table class="tableContainer">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Grade</th>
+                            <th>Materials Uploaded</th>
+                            <th>Assignments Published</th>
+                            <th>Submissions Received</th>
+                        </tr>
+                    </thead>
+                    <tbody id="courseworkTbody">
+                        <tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 20px;">Loading coursework data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+    <script src="admin_reports.js"></script>
+</body>
+
+</html>

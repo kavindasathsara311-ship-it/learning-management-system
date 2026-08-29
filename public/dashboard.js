@@ -25,7 +25,12 @@ function renderSidebar(activePage, role) {
 
     if (!activePage) {
         const path = window.location.pathname.toLowerCase();
-        if (path.includes("student_dashboard.html") || path.includes("teacher_dashboard.html")) activePage = "dashboard";
+        if (path.includes("student_dashboard.html") || path.includes("teacher_dashboard.html") || path.includes("admin_dashboard.html")) activePage = "dashboard";
+        else if (path.includes("admin_students.html")) activePage = "students";
+        else if (path.includes("admin_teachers.html")) activePage = "teachers";
+        else if (path.includes("admin_subjects.html")) activePage = "subjects";
+        else if (path.includes("admin_reports.html")) activePage = "reports";
+        else if (path.includes("admin_settings.html")) activePage = "system_settings";
         else if (path.includes("student_subject.html") || path.includes("teacher_class.html")) activePage = effectiveRole === "teacher" ? "classes" : "subjects";
         else if (path.includes("student_assignments.html") || path.includes("teacher_assignment.html")) activePage = "assignments";
         else if (path.includes("student_exam_results.html")) activePage = "results";
@@ -39,7 +44,16 @@ function renderSidebar(activePage, role) {
     }
 
     let mainNavLinks = [];
-    if (effectiveRole === "teacher") {
+    if (effectiveRole === "admin") {
+        mainNavLinks = [
+            { id: "dashboard", text: "Dashboard", href: "Admin_Dashboard.html", icon: "fa-chart-line" },
+            { id: "students", text: "Students", href: "admin_students.html", icon: "fa-user-graduate" },
+            { id: "teachers", text: "Teachers", href: "admin_teachers.html", icon: "fa-chalkboard-teacher" },
+            { id: "subjects", text: "Subjects / Classes", href: "admin_subjects.html", icon: "fa-book-open" },
+            { id: "reports", text: "Reports & Analytics", href: "admin_reports.html", icon: "fa-chart-pie" },
+            { id: "system_settings", text: "System Settings", href: "admin_settings.html", icon: "fa-sliders" }
+        ];
+    } else if (effectiveRole === "teacher") {
         mainNavLinks = [
             { id: "dashboard", text: "Dashboard", href: "Teacher_Dashboard.html", icon: "fa-newspaper" },
             { id: "classes", text: "Classes", href: "teacher_Class.html", icon: "fa-chalkboard-user" },
@@ -64,7 +78,7 @@ function renderSidebar(activePage, role) {
     }
 
     const footerNavLinks = [
-        { id: "settings", text: "Settings", href: "settings.html", icon: "fa-cog" },
+        { id: "settings", text: "Account Settings", href: "settings.html", icon: "fa-cog" },
         { id: "profile", text: "Profile", href: "profile.html", icon: "fa-user" }
     ];
 
@@ -80,7 +94,7 @@ function renderSidebar(activePage, role) {
         <a class="navLink logOutButton footerNavLink" data-page="logout" style="cursor: pointer;"><i class="fa fa-sign-out"></i><span>Log Out</span></a>
     `;
 
-    const portalTitle = effectiveRole === "teacher" ? "Teacher Portal" : "School Name";
+    const portalTitle = effectiveRole === "admin" ? "Admin Portal" : (effectiveRole === "teacher" ? "Teacher Portal" : "School Name");
 
     const fullSidebarHtml = `
         <nav class="topNavBar DashboardPart" id="topNavBar">
