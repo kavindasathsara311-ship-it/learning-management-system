@@ -265,3 +265,18 @@ if (greetingElement) {
     }
     teacherGreetingElement.textContent = greetingText;
 }
+
+function renderCard(container, title, value, iconClass, onClickUrl) {
+    const target = typeof container === 'string' ? document.querySelector(container) : container;
+    if (!target) return;
+    const card = document.createElement("div");
+    card.className = "card";
+    if (onClickUrl) {
+        card.onclick = () => window.location.href = onClickUrl;
+    }
+    card.innerHTML = `
+        <h4 class="cardTitle"><i class="fa ${iconClass || 'fa-info-circle'}"></i> ${title}</h4>
+        <div class="cardValue">${value}</div>
+    `;
+    target.appendChild(card);
+}

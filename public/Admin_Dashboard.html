@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - School LMS</title>
+    <link rel="stylesheet" href="shared-portal.css">
     <link rel="stylesheet" href="Teacher_Dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -203,31 +204,31 @@
 
             <!-- KPI Cards -->
             <div class="kpiGrid">
-                <a href="admin_students.html" class="kpiCard">
+                <a href="admin_students.html" class="kpiCard card">
                     <div>
-                        <h4>Total Students</h4>
-                        <div class="val" id="kpiStudents">...</div>
+                        <h4 class="cardTitle">Total Students</h4>
+                        <div class="cardValue" id="kpiStudents">...</div>
                     </div>
                     <div class="kpiIcon iconBlue"><i class="fa fa-user-graduate"></i></div>
                 </a>
-                <a href="admin_teachers.html" class="kpiCard">
+                <a href="admin_teachers.html" class="kpiCard card">
                     <div>
-                        <h4>Total Teachers</h4>
-                        <div class="val" id="kpiTeachers">...</div>
+                        <h4 class="cardTitle">Total Teachers</h4>
+                        <div class="cardValue" id="kpiTeachers">...</div>
                     </div>
                     <div class="kpiIcon iconGreen"><i class="fa fa-chalkboard-teacher"></i></div>
                 </a>
-                <a href="admin_subjects.html" class="kpiCard">
+                <a href="admin_subjects.html" class="kpiCard card">
                     <div>
-                        <h4>Subjects & Classes</h4>
-                        <div class="val" id="kpiSubjects">...</div>
+                        <h4 class="cardTitle">Subjects & Classes</h4>
+                        <div class="cardValue" id="kpiSubjects">...</div>
                     </div>
                     <div class="kpiIcon iconPurple"><i class="fa fa-book-open"></i></div>
                 </a>
-                <a href="admin_reports.html" class="kpiCard">
+                <a href="admin_reports.html" class="kpiCard card">
                     <div>
-                        <h4>Upcoming Exams</h4>
-                        <div class="val" id="kpiExams">...</div>
+                        <h4 class="cardTitle">Upcoming Exams</h4>
+                        <div class="cardValue" id="kpiExams">...</div>
                     </div>
                     <div class="kpiIcon iconOrange"><i class="fa fa-calendar-check"></i></div>
                 </a>

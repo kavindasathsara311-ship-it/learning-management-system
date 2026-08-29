@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teacher Portal - Dashboard</title>
+    <link rel="stylesheet" href="shared-portal.css">
     <link rel="stylesheet" href="Teacher_Dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
@@ -81,20 +82,20 @@
             <div class="cards-container">
                 <a href="teacher_Class.html" class="summaryCardLink">
                     <div class="card">
-                        <h2><i class="fas fa-chalkboard-user" style="color: #00bcd4;"></i> Classes</h2>
-                        <p id="classesCountText">Loading assigned classes...</p>
+                        <h2 class="cardTitle"><i class="fas fa-chalkboard-user" style="color: #00bcd4;"></i> Assigned Classes</h2>
+                        <p class="cardValue" id="classesCountText" style="font-size: 20px;">Loading assigned classes...</p>
                     </div>
                 </a>
                 <a href="teacher_Exam.html" class="summaryCardLink">
                     <div class="card">
-                        <h2><i class="fas fa-calendar" style="color: #a855f7;"></i> Exams</h2> 
-                        <p id="examsCountText">Loading upcoming exams...</p>
+                        <h2 class="cardTitle"><i class="fas fa-calendar" style="color: #a855f7;"></i> Scheduled Exams</h2> 
+                        <p class="cardValue" id="examsCountText" style="font-size: 20px;">Loading upcoming exams...</p>
                     </div>
                 </a>
                 <a href="teacher_Timetable.html" class="summaryCardLink">
                     <div class="card">
-                        <h2><i class="fas fa-clock" style="color: #22c55e;"></i> TimeTable</h2>
-                        <p id="timetableCountText">Loading today's schedule...</p>
+                        <h2 class="cardTitle"><i class="fas fa-clock" style="color: #22c55e;"></i> Today's TimeTable</h2>
+                        <p class="cardValue" id="timetableCountText" style="font-size: 20px;">Loading today's schedule...</p>
                     </div>
                 </a>
             </div>

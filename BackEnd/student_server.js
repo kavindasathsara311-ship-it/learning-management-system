@@ -400,43 +400,61 @@ app.post("/student-login", async (req, res) => {
     return res.status(400).json({ success: false, message: "Email/Reg No and password are required" });
   }
 
-  const cleanIdentifier = email.trim();
-  const cleanPassword = password.trim();
+  const cleanIdentifier = String(email).trim();
+  const cleanPassword = String(password).trim();
+  console.log(`[STUDENT LOGIN ATTEMPT] Received identifier: "${cleanIdentifier}", password length: ${cleanPassword.length}`);
 
   try {
     const result = await pool.query(
-      "SELECT * FROM student WHERE LOWER(email) = LOWER($1) OR student_reg_no = $1 OR student_id::text = $1 OR LOWER(student_name) = LOWER($1)",
+      `SELECT * FROM student 
+       WHERE LOWER(email) = LOWER($1) 
+          OR student_reg_no = $1 
+          OR student_id::text = $1 
+          OR LOWER(TRIM(student_name)) = LOWER(TRIM($1))
+          OR LOWER(REPLACE(student_name, ' ', '')) = LOWER(REPLACE($1, ' ', ''))`,
       [cleanIdentifier]
     );
 
     if (result.rows.length === 0) {
+      console.log(`[STUDENT LOGIN FAILED] No student found for identifier: "${cleanIdentifier}"`);
       return res.status(401).json({ success: false, message: "Invalid credentials: No student account found matching " + cleanIdentifier });
     }
 
-    const student = result.rows[0];
-    let isMatch = false;
-    if (student.password && (student.password.startsWith("$2a$") || student.password.startsWith("$2b$") || student.password.startsWith("$2y$"))) {
-      isMatch = await bcrypt.compare(cleanPassword, student.password);
-    } else {
-      isMatch = (cleanPassword === student.password);
+    console.log(`[STUDENT LOGIN FOUND] Matched ${result.rows.length} candidate(s) for "${cleanIdentifier}"`);
+
+    let authenticatedStudent = null;
+    for (const student of result.rows) {
+      let isMatch = false;
+      if (student.password && (student.password.startsWith("$2a$") || student.password.startsWith("$2b$") || student.password.startsWith("$2y$"))) {
+        isMatch = await bcrypt.compare(cleanPassword, student.password);
+      } else {
+        isMatch = (cleanPassword === student.password);
+      }
+
+      if (isMatch) {
+        authenticatedStudent = student;
+        break;
+      }
     }
 
-    if (!isMatch) {
-      return res.status(401).json({ success: false, message: "Invalid credentials" });
+    if (!authenticatedStudent) {
+      console.log(`[STUDENT LOGIN FAILED] Password mismatch for identifier: "${cleanIdentifier}"`);
+      return res.status(401).json({ success: false, message: "Invalid credentials: Incorrect password" });
     }
 
     const token = jwt.sign(
       {
-        id: student.student_reg_no || student.student_id,
-        name: student.student_name,
-        email: student.email,
-        grade: student.grade_id,
+        id: authenticatedStudent.student_reg_no || authenticatedStudent.student_id,
+        name: authenticatedStudent.student_name,
+        email: authenticatedStudent.email,
+        grade: authenticatedStudent.grade_id,
         role: "student"
       },
       JWT_SECRET,
       { expiresIn: "24h" }
     );
 
+    console.log(`[STUDENT LOGIN SUCCESS] Authenticated as: ${authenticatedStudent.student_name} (${authenticatedStudent.email})`);
     res.json({ success: true, message: "Login successful", token });
   } catch (err) {
     console.error("Student login error:", err);
@@ -446,18 +464,22 @@ app.post("/student-login", async (req, res) => {
 
 app.post("/teacher-login", async (req, res) => {
   const { email, password } = req.body;
-  console.log(`[TEACHER LOGIN ATTEMPT] Received identifier: "${email}", password length: ${password ? password.length : 0}`);
-
   if (!email || !password) {
     return res.status(400).json({ success: false, message: "Email/Reg No and password are required" });
   }
 
-  const cleanIdentifier = email.trim();
-  const cleanPassword = password.trim();
+  const cleanIdentifier = String(email).trim();
+  const cleanPassword = String(password).trim();
+  console.log(`[TEACHER LOGIN ATTEMPT] Received identifier: "${cleanIdentifier}", password length: ${cleanPassword.length}`);
 
   try {
     const result = await pool.query(
-      "SELECT * FROM teacher WHERE LOWER(email) = LOWER($1) OR teacher_reg_no = $1 OR teacher_id::text = $1 OR LOWER(teacher_name) = LOWER($1)",
+      `SELECT * FROM teacher 
+       WHERE LOWER(email) = LOWER($1) 
+          OR teacher_reg_no = $1 
+          OR teacher_id::text = $1 
+          OR LOWER(TRIM(teacher_name)) = LOWER(TRIM($1))
+          OR LOWER(REPLACE(teacher_name, ' ', '')) = LOWER(REPLACE($1, ' ', ''))`,
       [cleanIdentifier]
     );
 
@@ -466,34 +488,38 @@ app.post("/teacher-login", async (req, res) => {
       return res.status(401).json({ success: false, message: "Invalid credentials: No account found matching " + cleanIdentifier });
     }
 
-    const teacher = result.rows[0];
-    console.log(`[TEACHER LOGIN FOUND] Teacher ID: ${teacher.teacher_id}, Reg No: ${teacher.teacher_reg_no}, Name: ${teacher.teacher_name}, Email: ${teacher.email}`);
+    let authenticatedTeacher = null;
+    for (const teacher of result.rows) {
+      let isMatch = false;
+      if (teacher.password && (teacher.password.startsWith("$2a$") || teacher.password.startsWith("$2b$") || teacher.password.startsWith("$2y$"))) {
+        isMatch = await bcrypt.compare(cleanPassword, teacher.password);
+      } else {
+        isMatch = (cleanPassword === teacher.password);
+      }
 
-    let isMatch = false;
-    if (teacher.password && (teacher.password.startsWith("$2a$") || teacher.password.startsWith("$2b$") || teacher.password.startsWith("$2y$"))) {
-      isMatch = await bcrypt.compare(cleanPassword, teacher.password);
-    } else {
-      isMatch = (cleanPassword === teacher.password);
+      if (isMatch) {
+        authenticatedTeacher = teacher;
+        break;
+      }
     }
 
-    console.log(`[TEACHER LOGIN RESULT] Password match result: ${isMatch}`);
-
-    if (!isMatch) {
+    if (!authenticatedTeacher) {
+      console.log(`[TEACHER LOGIN FAILED] Password mismatch for identifier: "${cleanIdentifier}"`);
       return res.status(401).json({ success: false, message: "Invalid credentials: Incorrect password" });
     }
 
     const token = jwt.sign(
       {
-        id: teacher.teacher_reg_no || teacher.teacher_id,
-        name: teacher.teacher_name,
-        email: teacher.email,
+        id: authenticatedTeacher.teacher_reg_no || authenticatedTeacher.teacher_id,
+        name: authenticatedTeacher.teacher_name,
+        email: authenticatedTeacher.email,
         role: "teacher"
       },
       JWT_SECRET,
       { expiresIn: "24h" }
     );
 
-    console.log(`[TEACHER LOGIN SUCCESS] Token generated for: ${teacher.teacher_name}`);
+    console.log(`[TEACHER LOGIN SUCCESS] Token generated for: ${authenticatedTeacher.teacher_name}`);
     res.json({ success: true, message: "Login successful", token });
   } catch (err) {
     console.error("[TEACHER LOGIN ERROR]", err);
@@ -508,12 +534,17 @@ app.post("/admin-login", async (req, res) => {
     return res.status(400).json({ success: false, message: "Email/Reg No and password are required" });
   }
 
-  const cleanIdentifier = email.trim();
-  const cleanPassword = password.trim();
+  const cleanIdentifier = String(email).trim();
+  const cleanPassword = String(password).trim();
 
   try {
     const result = await pool.query(
-      "SELECT * FROM admin WHERE LOWER(email) = LOWER($1) OR admin_reg_no = $1 OR admin_id::text = $1 OR LOWER(admin_name) = LOWER($1)",
+      `SELECT * FROM admin 
+       WHERE LOWER(email) = LOWER($1) 
+          OR admin_reg_no = $1 
+          OR admin_id::text = $1 
+          OR LOWER(TRIM(admin_name)) = LOWER(TRIM($1))
+          OR LOWER(REPLACE(admin_name, ' ', '')) = LOWER(REPLACE($1, ' ', ''))`,
       [cleanIdentifier]
     );
 
@@ -521,23 +552,30 @@ app.post("/admin-login", async (req, res) => {
       return res.status(401).json({ success: false, message: "Invalid credentials: No admin account found matching " + cleanIdentifier });
     }
 
-    const admin = result.rows[0];
-    let isMatch = false;
-    if (admin.password && (admin.password.startsWith("$2a$") || admin.password.startsWith("$2b$") || admin.password.startsWith("$2y$"))) {
-      isMatch = await bcrypt.compare(cleanPassword, admin.password);
-    } else {
-      isMatch = (cleanPassword === admin.password);
+    let authenticatedAdmin = null;
+    for (const admin of result.rows) {
+      let isMatch = false;
+      if (admin.password && (admin.password.startsWith("$2a$") || admin.password.startsWith("$2b$") || admin.password.startsWith("$2y$"))) {
+        isMatch = await bcrypt.compare(cleanPassword, admin.password);
+      } else {
+        isMatch = (cleanPassword === admin.password);
+      }
+
+      if (isMatch) {
+        authenticatedAdmin = admin;
+        break;
+      }
     }
 
-    if (!isMatch) {
+    if (!authenticatedAdmin) {
       return res.status(401).json({ success: false, message: "Invalid credentials: Incorrect password" });
     }
 
     const token = jwt.sign(
       {
-        id: admin.admin_reg_no || admin.admin_id,
-        name: admin.admin_name,
-        email: admin.email,
+        id: authenticatedAdmin.admin_reg_no || authenticatedAdmin.admin_id,
+        name: authenticatedAdmin.admin_name,
+        email: authenticatedAdmin.email,
         role: "admin"
       },
       JWT_SECRET,

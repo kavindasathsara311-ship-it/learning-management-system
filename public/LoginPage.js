@@ -694,15 +694,36 @@ cancelOtp.addEventListener('click', () => {
     signupForm.style.display = 'flex'; // Show the signup form again
 });
 
+if (logInPageForm) {
+    logInPageForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (studentLogInForm && studentLogInForm.style.display !== 'none') {
+            LogInStudentSubmitButton.click();
+        } else if (teacherLogInForm && teacherLogInForm.style.display !== 'none') {
+            LogInTeacherSubmitButton.click();
+        } else if (adminLogInForm && adminLogInForm.style.display !== 'none') {
+            if (LogInAdminSubmitButton) LogInAdminSubmitButton.click();
+        }
+    });
+}
+
 LogInStudentSubmitButton.addEventListener('click', (e) => {
     e.preventDefault();
+
+    const emailVal = LogInStudentusername.value ? LogInStudentusername.value.trim() : "";
+    const passVal = LogInStudentpassword.value ? LogInStudentpassword.value.trim() : "";
+
+    if (!emailVal || !passVal) {
+        alert("Please enter both your Student User Name / Email / Reg No and Password");
+        return;
+    }
 
     fetch("/student-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            email: LogInStudentusername.value,
-            password: LogInStudentpassword.value
+            email: emailVal,
+            password: passVal
         })
     })
         .then(res => res.json())
@@ -723,12 +744,21 @@ LogInStudentSubmitButton.addEventListener('click', (e) => {
 
 LogInTeacherSubmitButton.addEventListener('click', (e) => {
     e.preventDefault();
+
+    const emailVal = LogInTeacherusername.value ? LogInTeacherusername.value.trim() : "";
+    const passVal = LogInTeacherpassword.value ? LogInTeacherpassword.value.trim() : "";
+
+    if (!emailVal || !passVal) {
+        alert("Please enter both Teacher Username / Email / Reg No and Password");
+        return;
+    }
+
     fetch("/teacher-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            email: LogInTeacherusername.value,
-            password: LogInTeacherpassword.value
+            email: emailVal,
+            password: passVal
         })
     })
         .then(res => res.json())
@@ -750,12 +780,21 @@ LogInTeacherSubmitButton.addEventListener('click', (e) => {
 if (LogInAdminSubmitButton) {
     LogInAdminSubmitButton.addEventListener('click', (e) => {
         e.preventDefault();
+
+        const emailVal = LogInAdminusername.value ? LogInAdminusername.value.trim() : "";
+        const passVal = LogInAdminpassword.value ? LogInAdminpassword.value.trim() : "";
+
+        if (!emailVal || !passVal) {
+            alert("Please enter both Admin Username / Email and Password");
+            return;
+        }
+
         fetch("/admin-login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                email: LogInAdminusername.value,
-                password: LogInAdminpassword.value
+                email: emailVal,
+                password: passVal
             })
         })
             .then(res => res.json())
